@@ -1,0 +1,2586 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="unit#">
+<meta name="theme-color" content="#8b1a2e">
+<title>unit#</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --primary:#8b1a2e;
+  --primary-d:#6b1222;
+  --primary-l:#f9ebed;
+  --gold:#b8860b;
+  --gold-l:#fdf8e1;
+  --maeure:#2e7d32;   --maeure-l:#e8f5e9;
+  --oki:#1565c0;      --oki-l:#e3f2fd;
+  --tojitsu:#e65100;  --tojitsu-l:#fff3e0;
+  --border:#e0e0e0;
+  --text:#212121;
+  --sub:#757575;
+  --bg:#faf7f5;
+  --card:#ffffff;
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);
+  --sar:env(safe-area-inset-right,0px);
+}
+html,body{height:100%;height:100dvh;overflow:hidden;}
+body{background:var(--bg);font-family:-apple-system,'Hiragino Sans',sans-serif;
+  color:var(--text);-webkit-text-size-adjust:100%;}
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer;}
+input,select{font-family:inherit;font-size:inherit;}
+
+#app{display:flex;flex-direction:column;height:100%;height:100dvh;
+  padding-top:var(--sat);padding-left:var(--sal);padding-right:var(--sar);}
+
+/* ===== HOME SCREEN ===== */
+#homeScreen{position:fixed;inset:0;background:var(--primary);z-index:200;
+  display:flex;flex-direction:column;align-items:center;
+  padding:0 20px calc(env(safe-area-inset-bottom,0px) + 24px);
+  overflow-y:auto;}
+#homeScreen.hidden{display:none;}
+.home-top{display:flex;flex-direction:column;align-items:center;
+  padding-top:calc(env(safe-area-inset-top,0px) + 52px);margin-bottom:32px;}
+.home-logo{font-size:3rem;margin-bottom:8px;}
+.home-appname{font-size:1.6rem;font-weight:800;color:#fff;letter-spacing:.08em;}
+.home-sub{font-size:.9rem;color:rgba(255,255,255,.65);margin-top:6px;}
+.home-grid{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  margin-bottom:24px;}
+.home-mbtn{display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:rgba(255,255,255,.12);border:2px solid transparent;
+  border-radius:14px;padding:14px 8px;cursor:pointer;transition:.15s;
+  color:#fff;-webkit-tap-highlight-color:transparent;}
+.home-mbtn:active{transform:scale(.95);}
+.home-mbtn.sel{background:rgba(255,255,255,.22);border-color:#fff;
+  box-shadow:0 0 0 3px rgba(255,255,255,.25);}
+.home-avatar{width:48px;height:48px;border-radius:50%;
+  background:rgba(255,255,255,.25);display:flex;align-items:center;
+  justify-content:center;font-size:1.25rem;font-weight:800;color:#fff;}
+.home-mbtn.sel .home-avatar{background:#fff;color:var(--primary);}
+.home-mname{font-size:.8rem;font-weight:600;text-align:center;
+  word-break:break-all;line-height:1.3;}
+.home-enter{width:100%;padding:16px;border-radius:14px;border:none;
+  background:#fff;color:var(--primary);font-size:1rem;font-weight:800;
+  letter-spacing:.04em;cursor:pointer;transition:.15s;margin-top:auto;}
+.home-enter:disabled{background:rgba(255,255,255,.25);color:rgba(255,255,255,.45);cursor:default;}
+.home-enter:not(:disabled):active{transform:scale(.97);}
+
+/* ===== HEADER member chip ===== */
+.hdr-member{display:flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);
+  border-radius:20px;padding:3px 10px 3px 6px;cursor:pointer;
+  font-size:.8rem;font-weight:700;color:#fff;flex-shrink:0;}
+.hdr-member-av{width:22px;height:22px;border-radius:50%;background:#fff;
+  color:var(--primary);display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:800;}
+
+/* ===== HEADER ===== */
+.hdr{flex-shrink:0;background:var(--primary);color:#fff;
+  padding:11px 14px 9px;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.hdr-title{font-size:1.05rem;font-weight:700;flex:1;}
+.hdr-add-perf{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);
+  color:#fff;border-radius:6px;padding:4px 10px;font-size:.8rem;}
+.perf-tabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;
+  scrollbar-width:none;margin-top:7px;}
+.perf-tabs::-webkit-scrollbar{display:none;}
+.perf-tab{padding:5px 12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.4);
+  background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);
+  font-size:.95rem;font-weight:600;white-space:normal;flex-shrink:0;
+  line-height:1.3;text-align:center;max-width:100px;}
+.perf-tab.act{background:#fff;color:var(--primary);border-color:#fff;}
+.perf-tab-empty{font-size:.8rem;color:rgba(255,255,255,.6);padding:5px 0;}
+
+/* ===== TAB BAR ===== */
+.tabbar{flex-shrink:0;display:flex;background:#fff;
+  border-top:1px solid var(--border);
+  padding-bottom:var(--sab);}
+.tbbtn{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:6px 2px;gap:2px;
+  background:none;border:none;font-size:.68rem;color:#999;}
+.tbbtn .ti{font-size:1.4rem;}
+.tbbtn.act{color:var(--primary);}
+
+/* ===== CONTENT ===== */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:12px 12px 80px;}
+
+/* ===== VIEWS ===== */
+.view{display:none;}
+.view.act{display:block;}
+
+/* ===== CARD ===== */
+.card{background:var(--card);border-radius:12px;
+  padding:14px;margin-bottom:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.card-title{font-weight:700;font-size:.95rem;margin-bottom:12px;}
+
+/* ===== STATS ROW ===== */
+.stats{display:flex;gap:8px;margin-bottom:12px;}
+.stat{flex:1;background:var(--card);border-radius:10px;padding:10px 6px;
+  text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+.stat-n{font-size:1.8rem;font-weight:700;line-height:1;}
+.stat-l{font-size:.75rem;color:var(--sub);margin-top:3px;}
+
+/* ===== FILTER TABS ===== */
+.filters{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;
+  padding-bottom:2px;scrollbar-width:none;}
+.filters::-webkit-scrollbar{display:none;}
+.ftab{padding:7px 16px;border-radius:20px;border:1px solid var(--border);
+  background:var(--card);font-size:.9rem;white-space:nowrap;}
+.ftab.act{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+/* ===== TICKET ITEM ===== */
+.titem{display:flex;align-items:center;gap:10px;
+  padding:12px 0;border-bottom:1px solid var(--border);}
+.titem:last-child{border-bottom:none;}
+.titem.cancelled{opacity:.4;}
+.tbuyer{font-size:1.1rem;font-weight:600;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tmeta{font-size:.85rem;color:var(--sub);margin-top:2px;}
+.tbadges{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+
+/* ===== BADGES ===== */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:.8rem;font-weight:700;}
+.bm{background:var(--maeure-l);color:var(--maeure);}
+.bo{background:var(--oki-l);color:var(--oki);}
+.bt{background:var(--tojitsu-l);color:var(--tojitsu);}
+.bc{background:#f5f5f5;color:#9e9e9e;}
+.arrived-badge{background:#e3f2fd;color:#1565c0;
+  font-size:.78rem;padding:2px 8px;border-radius:10px;}
+.unsettled-badge{background:#fff3e0;color:#e65100;
+  font-size:.78rem;padding:2px 8px;border-radius:10px;}
+.settled-badge{background:#f5f5f5;color:#9e9e9e;
+  font-size:.78rem;padding:2px 8px;border-radius:10px;}
+
+/* ===== OKI ITEM ===== */
+.oitem{display:flex;align-items:center;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border);}
+.oitem:last-child{border-bottom:none;}
+.oitem.done{opacity:.45;}
+.oci-btn{width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  border:2px solid var(--oki);background:transparent;
+  font-size:1.1rem;color:var(--oki);display:flex;align-items:center;justify-content:center;}
+.oitem.done .oci-btn{background:var(--oki);color:#fff;border-color:var(--oki);}
+.oname{font-size:1.1rem;font-weight:600;flex:1;}
+.ometa{font-size:.85rem;color:var(--sub);}
+
+/* ===== SUMMARY ===== */
+.sum-row{display:flex;align-items:center;gap:0;
+  padding:10px 0;border-bottom:1px solid var(--border);}
+.sum-row:last-child{border-bottom:none;}
+.sum-name{font-weight:600;font-size:1rem;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sum-cols{display:flex;gap:4px;flex-shrink:0;}
+.scol{width:44px;text-align:center;}
+.scol-n{font-size:1.15rem;font-weight:700;line-height:1.2;}
+.scol-l{font-size:.65rem;color:var(--sub);}
+.sum-total{background:var(--primary-l);border-radius:8px;padding:10px;
+  display:flex;align-items:center;margin-bottom:8px;}
+.sum-total .sum-name{font-weight:800;}
+
+/* ===== SETTINGS ===== */
+.sitem{display:flex;align-items:center;gap:8px;
+  padding:11px 0;border-bottom:1px solid var(--border);}
+.sitem:last-child{border-bottom:none;}
+.sitem-info{flex:1;min-width:0;}
+.sitem-name{font-weight:600;font-size:1.05rem;}
+.sitem-sub{font-size:.82rem;color:var(--sub);margin-top:2px;}
+.sitem-acts{display:flex;gap:6px;flex-shrink:0;}
+
+/* ===== BUTTONS ===== */
+.btn{padding:9px 18px;border:none;border-radius:8px;font-size:.88rem;
+  font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:5px;}
+.btn-p{background:var(--primary);color:#fff;}
+.btn-s{background:#f0f0f0;color:var(--text);}
+.btn-d{background:#ffebee;color:#c62828;}
+.btn-g{background:var(--maeure-l);color:var(--maeure);}
+.btn-blk{width:100%;padding:12px;font-size:.95rem;margin-top:10px;}
+.btn-sm{padding:6px 12px;font-size:.78rem;border-radius:6px;}
+
+/* ===== FAB ===== */
+.fab{position:fixed;bottom:calc(70px + var(--sab) + 14px);right:18px;
+  width:56px;height:56px;border-radius:50%;background:var(--primary);
+  color:#fff;font-size:1.8rem;border:none;
+  box-shadow:0 4px 14px rgba(139,26,46,.45);
+  display:flex;align-items:center;justify-content:center;z-index:80;}
+
+/* ===== MODAL ===== */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.moverlay.show{display:flex;}
+.modal{background:#fff;border-radius:20px 20px 0 0;
+  padding:20px 18px;width:100%;max-width:480px;
+  max-height:90dvh;overflow-y:auto;
+  padding-bottom:calc(20px + var(--sab));}
+.modal-title{font-size:1.1rem;font-weight:700;text-align:center;margin-bottom:16px;}
+
+/* ===== FORM ===== */
+.fg{margin-bottom:12px;}
+.flabel{font-size:.78rem;color:var(--sub);margin-bottom:4px;display:block;}
+.finput,.fsel{width:100%;padding:10px 12px;border:1.5px solid var(--border);
+  border-radius:8px;font-size:.95rem;background:#fff;}
+.finput:focus,.fsel:focus{outline:none;border-color:var(--primary);}
+.frow{display:flex;gap:10px;margin-top:14px;}
+
+/* ===== TYPE PILLS ===== */
+.tpills{display:flex;gap:8px;margin-bottom:14px;}
+.tpill{flex:1;padding:10px 4px;border:2px solid var(--border);
+  border-radius:10px;background:#fff;text-align:center;
+  font-size:.85rem;font-weight:600;color:var(--sub);}
+.tpill.pm{border-color:var(--maeure);background:var(--maeure-l);color:var(--maeure);}
+.tpill.po{border-color:var(--oki);background:var(--oki-l);color:var(--oki);}
+.tpill.pt{border-color:var(--tojitsu);background:var(--tojitsu-l);color:var(--tojitsu);}
+
+/* ===== EMPTY STATE ===== */
+.empty{text-align:center;padding:36px 20px;color:var(--sub);}
+.empty-ic{font-size:2.8rem;margin-bottom:10px;}
+
+/* ===== SEC LABEL ===== */
+.sec-lbl{font-size:.75rem;font-weight:700;color:var(--sub);
+  text-transform:uppercase;letter-spacing:.05em;
+  margin:16px 0 7px;}
+
+/* ===== LOADING ===== */
+.loading{position:fixed;inset:0;background:var(--primary);
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;color:#fff;z-index:999;}
+.loading.hidden{display:none;}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ===== OKI HEADER ===== */
+.oki-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.oki-prog{font-size:.82rem;color:var(--sub);}
+
+/* ===== RECEPTION ===== */
+.rec-counter-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;}
+.rec-cnt-btn{width:64px;height:64px;border-radius:50%;border:none;
+  background:#f0f0f0;font-size:2rem;font-weight:300;color:var(--text);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:transform .08s ease, background .08s ease;
+  -webkit-tap-highlight-color:transparent;}
+.rec-cnt-btn:active{transform:scale(.82);}
+.rec-cnt-plus{background:var(--maeure-l);color:var(--maeure);}
+.rec-cnt-plus:active{background:#c8e6c9;}
+.rec-cnt-minus:active{background:#e0e0e0;}
+.rec-cnt-display{flex:1;text-align:center;position:relative;}
+.rec-cnt-n{font-size:3.5rem;font-weight:800;color:var(--maeure);line-height:1;
+  display:inline-block;transition:transform .12s ease;}
+.rec-cnt-n.bump{animation:bump .2s ease;}
+@keyframes bump{
+  0%{transform:scale(1);}
+  40%{transform:scale(1.35);}
+  100%{transform:scale(1);}
+}
+.rec-cnt-total{font-size:1rem;color:var(--sub);margin-left:4px;}
+
+/* ===== ALL-PERF TOGGLE ===== */
+.sum-scope{display:flex;gap:8px;margin-bottom:12px;}
+.scope-btn{flex:1;padding:8px;border:1.5px solid var(--border);
+  border-radius:8px;background:#fff;font-size:.85rem;font-weight:600;color:var(--sub);}
+.scope-btn.act{border-color:var(--primary);background:var(--primary-l);color:var(--primary);}
+
+/* ===== SCHEDULE ===== */
+.sched-card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.sched-open{display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:.72rem;font-weight:700;background:#e8f5e9;color:#2e7d32;white-space:nowrap;flex-shrink:0;}
+.sched-closed{display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:.72rem;font-weight:700;background:#f5f5f5;color:#9e9e9e;white-space:nowrap;flex-shrink:0;}
+.sgrid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px;}
+.sgrid{border-collapse:collapse;}
+.sgrid th,.sgrid td{padding:7px 6px;text-align:center;border:1px solid var(--border);
+  font-size:.82rem;white-space:nowrap;min-width:54px;}
+.sgrid thead th{background:var(--primary-l);color:var(--primary);font-weight:700;font-size:.75rem;line-height:1.4;}
+.sgrid .nc{text-align:left;min-width:64px;max-width:88px;font-weight:600;font-size:.82rem;
+  overflow:hidden;text-overflow:ellipsis;}
+.sgrid tfoot td{background:#fafafa;}
+.sgrid tfoot .nc{font-size:.72rem;color:var(--sub);background:#fafafa;}
+.ok-c{color:var(--maeure);font-weight:800;font-size:1.1rem;}
+.mb-c{color:#f57c00;font-weight:800;font-size:1.1rem;}
+.ng-c{color:#bdbdbd;font-size:1rem;}
+.slot-row{display:flex;gap:6px;align-items:center;margin-bottom:7px;}
+.ans-row{display:flex;align-items:center;gap:10px;padding:10px 0;
+  border-bottom:1px solid var(--border);}
+.ans-row:last-child{border-bottom:none;}
+.ans-lbl{flex:1;font-size:.88rem;font-weight:600;min-width:0;line-height:1.4;}
+.ans-btns{display:flex;gap:5px;flex-shrink:0;}
+.ans-btn{width:40px;height:40px;border-radius:8px;border:2px solid var(--border);
+  background:#fff;font-size:1.15rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;}
+.ans-btn.a-ok{background:var(--maeure-l);border-color:var(--maeure);color:var(--maeure);}
+.ans-btn.a-mb{background:#fff8e1;border-color:#f57c00;color:#f57c00;}
+.ans-btn.a-ng{background:#ffebee;border-color:#c62828;color:#c62828;}
+.best-col{background:#e8f5e9 !important;}
+
+/* ===== REHEARSAL PLAN ===== */
+.rp-row{display:flex;align-items:center;gap:8px;padding:9px 0;
+  border-bottom:1px solid var(--border);}
+.rp-row:last-child{border-bottom:none;}
+.rp-rank{font-size:.78rem;font-weight:700;color:var(--sub);min-width:22px;text-align:right;}
+.rp-info{flex:1;min-width:0;}
+.rp-label{font-weight:700;font-size:.9rem;}
+.rp-time{color:var(--sub);font-weight:400;font-size:.82rem;}
+.rp-names{margin-top:3px;display:flex;flex-wrap:wrap;gap:3px;}
+.rp-ok-chip{background:var(--maeure-l);color:var(--maeure);
+  padding:1px 7px;border-radius:10px;font-size:.72rem;font-weight:700;}
+.rp-mb-chip{background:#fff8e1;color:#f57c00;
+  padding:1px 7px;border-radius:10px;font-size:.72rem;}
+.rp-score{text-align:right;flex-shrink:0;min-width:52px;}
+.rp-ok-n{font-weight:800;color:var(--maeure);font-size:1.05rem;line-height:1.2;}
+.rp-ok-sub{font-size:.72rem;color:var(--sub);}
+.rp-mb-n{font-size:.75rem;color:#f57c00;}
+.rp-decided-badge{background:#e8f5e9;color:var(--maeure);
+  font-size:.75rem;font-weight:700;padding:4px 8px;border-radius:8px;flex-shrink:0;}
+.rp-decide-btn{background:var(--primary);color:#fff;border:none;
+  border-radius:8px;padding:6px 10px;font-size:.8rem;font-weight:700;
+  flex-shrink:0;white-space:nowrap;}
+.decided-chip{background:#e8f5e9;border-radius:8px;padding:7px 10px;
+  margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.decided-chip-label{font-weight:700;color:var(--maeure);flex:1;font-size:.9rem;}
+.decided-chip-team{font-size:.72rem;color:var(--sub);}
+
+/* ===== CALENDAR ===== */
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cal-month-lbl{font-size:1.05rem;font-weight:700;}
+.cal-nav-btn{background:var(--card);border:1.5px solid var(--border);border-radius:8px;
+  padding:6px 18px;font-size:1.2rem;font-weight:600;color:var(--text);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:10px;}
+.cal-dow{text-align:center;font-size:.68rem;font-weight:700;color:var(--sub);padding:3px 0;}
+.cal-dow.sun{color:#e53935;}.cal-dow.sat{color:#1565c0;}
+.cal-cell{display:flex;flex-direction:column;align-items:center;padding:3px 0;
+  border-radius:8px;min-height:46px;cursor:default;user-select:none;}
+.cal-cell.cur-month{background:var(--card);}
+.cal-cell.other-month{opacity:.18;}
+.cal-cell.has-event{cursor:pointer;}
+.cal-dn{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.83rem;font-weight:600;}
+.cal-cell.today .cal-dn{background:var(--primary-l);color:var(--primary);font-weight:800;}
+.cal-cell.has-event .cal-dn{background:var(--primary);color:#fff;font-weight:800;}
+.cal-cell.selected .cal-dn{background:var(--primary-d);color:#fff;font-weight:800;
+  box-shadow:0 2px 8px rgba(139,26,46,.4);}
+.cal-cell.has-event.today .cal-dn{background:var(--primary-d);color:#fff;}
+.cal-dots{display:flex;gap:2px;margin-top:2px;justify-content:center;}
+.cal-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);}
+.cal-event-panel{background:var(--card);border-radius:12px;padding:12px 14px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);margin-top:4px;}
+.cal-event-hdr{font-size:.78rem;font-weight:700;color:var(--sub);margin-bottom:8px;}
+.cal-event-item{display:flex;align-items:flex-start;gap:8px;
+  padding:8px 0;border-bottom:1px solid var(--border);}
+.cal-event-item:last-child{border-bottom:none;}
+.cal-event-time{font-size:.8rem;font-weight:700;color:var(--primary);
+  flex-shrink:0;min-width:56px;}
+.cal-event-name{font-size:.85rem;font-weight:600;line-height:1.4;}
+.cal-event-script{font-size:.75rem;color:var(--sub);margin-top:1px;}
+.cal-att-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+.cal-att-chip{font-size:.7rem;padding:2px 7px;border-radius:10px;font-weight:600;}
+.cal-att-chip.ok{background:var(--primary-light,#ffe8e8);color:var(--primary);}
+.cal-att-chip.mb{background:#f5f0e8;color:#b08030;}
+.subtabs{display:flex;gap:8px;margin-bottom:14px;}
+/* 出欠表 */
+.att-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.att-table{border-collapse:collapse;font-size:.75rem;background:var(--card);}
+.att-table th,.att-table td{padding:7px 10px;border-bottom:1px solid var(--border);
+  white-space:nowrap;text-align:center;}
+.att-th-slot{text-align:left;position:sticky;left:0;background:var(--primary);
+  color:#fff;z-index:3;font-size:.7rem;min-width:110px;padding:7px 8px;}
+.att-th-mem{font-size:.7rem;font-weight:700;color:var(--sub);background:var(--card);
+  border-bottom:2px solid var(--border);}
+.att-td-slot{text-align:left;position:sticky;left:0;background:var(--card);
+  z-index:1;font-size:.73rem;color:#444;border-right:2px solid var(--border);}
+.att-decided .att-td-slot{background:#fff0f0;color:var(--primary);font-weight:700;}
+.att-decided td{background:#fff8f8;}
+.att-ok{color:var(--primary);font-weight:700;font-size:.85rem;}
+.att-mb{color:#b08030;font-size:.85rem;}
+.att-ng{color:#ccc;font-size:.8rem;}
+.att-sched-sel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.att-sched-btn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);
+  background:var(--card);font-size:.82rem;cursor:pointer;font-weight:600;}
+.att-sched-btn.act{border-color:var(--primary);color:var(--primary);background:var(--primary-l);}
+.att-decided-badge{display:inline-block;font-size:.65rem;background:var(--primary);
+  color:#fff;border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:middle;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div style="font-size:1rem;font-weight:700">読み込み中...</div>
+  </div>
+
+  <!-- Home Screen -->
+  <div id="homeScreen" class="hidden">
+    <div class="home-top">
+      <div class="home-logo">🎭</div>
+      <div class="home-appname">unit#</div>
+      <div class="home-sub">あなたは誰ですか？</div>
+    </div>
+    <div class="home-grid" id="homeGrid"></div>
+    <button class="home-enter" id="homeEnterBtn" disabled onclick="enterApp()">
+      入場する →
+    </button>
+  </div>
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-top">
+      <span class="hdr-title">🎭 unit#</span>
+      <button class="hdr-member" id="hdrMember" onclick="showHomeScreen()" style="display:none">
+        <div class="hdr-member-av" id="hdrMemberAv"></div>
+        <span id="hdrMemberName"></span>
+      </button>
+      <button class="hdr-add-perf" id="btnAddPerf" onclick="openAddPerf()">＋ 公演</button>
+    </div>
+    <div class="perf-tabs" id="perfTabs">
+      <div class="perf-tab-empty">公演がありません</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content">
+
+    <!-- View: チケット -->
+    <div id="vTickets" class="view act">
+      <div class="stats" id="statsRow">
+        <div class="stat">
+          <div class="stat-n" id="sTotal">0</div>
+          <div class="stat-l">販売済み</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n" style="color:var(--maeure)" id="sMaeure">0</div>
+          <div class="stat-l">前売り</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n" style="color:var(--oki)" id="sOki">0</div>
+          <div class="stat-l">置きチケ</div>
+        </div>
+        <div class="stat" id="sRemainCard" style="display:none">
+          <div class="stat-n" id="sRemain" style="color:#c62828">—</div>
+          <div class="stat-l">残席</div>
+        </div>
+        </div>
+      <div class="filters" id="filterRow">
+        <button class="ftab act" onclick="setFilter('all',this)">すべて</button>
+        <button class="ftab" onclick="setFilter('maeure',this)">前売り</button>
+        <button class="ftab" onclick="setFilter('okichike',this)">置きチケ</button>
+      </div>
+      <div class="card" id="ticketList">
+        <div class="empty"><div class="empty-ic">🎫</div><div>公演を選択してください</div></div>
+      </div>
+    </div>
+
+    <!-- View: 受付 -->
+    <div id="vReception" class="view">
+      <select class="finput" id="recPerfSel" onchange="onRecPerfChange()" style="margin-bottom:12px;font-size:.95rem;">
+        <option value="">-- 公演を選択 --</option>
+      </select>
+      <div id="receptionContent">
+        <div class="empty"><div class="empty-ic">🚪</div><div>公演を選択してください</div></div>
+      </div>
+    </div>
+
+    <!-- View: 集計 -->
+    <div id="vSum" class="view">
+      <div class="sum-scope">
+        <button class="scope-btn act" id="scopePerf" onclick="setSumScope('perf')">この公演</button>
+        <button class="scope-btn" id="scopeAll" onclick="setSumScope('all')">全公演合計</button>
+      </div>
+      <div id="sumContent">
+        <div class="empty"><div class="empty-ic">📊</div><div>公演を選択してください</div></div>
+      </div>
+    </div>
+
+    <!-- View: 日程 -->
+    <div id="vSchedule" class="view">
+      <div class="subtabs">
+        <button class="scope-btn act" id="stab-list" onclick="switchSchedSubTab('list',this)">📋 日程調整</button>
+        <button class="scope-btn" id="stab-att"  onclick="switchSchedSubTab('att',this)">📊 出欠表</button>
+        <button class="scope-btn" id="stab-cal"  onclick="switchSchedSubTab('cal',this)">📅 カレンダー</button>
+      </div>
+      <div id="schedListContent">
+        <div class="empty"><div class="empty-ic">📅</div><div>読み込み中...</div></div>
+      </div>
+      <div id="attView"  style="display:none"></div>
+      <div id="calView"  style="display:none"></div>
+    </div>
+
+    <!-- View: 設定 -->
+    <div id="vSettings" class="view">
+      <div class="sec-lbl">脚本マスタ</div>
+      <div class="card" id="scriptListEl"></div>
+
+      <div class="sec-lbl">公演一覧</div>
+      <div class="card" id="perfListEl"></div>
+
+      <div class="sec-lbl">メンバー</div>
+      <div class="card" id="memberListEl"></div>
+    </div>
+
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tabbar">
+    <button class="tbbtn act" id="tb-tickets" onclick="switchTab('Tickets',this)">
+      <span class="ti">🎫</span>チケット
+    </button>
+    <button class="tbbtn" id="tb-reception" onclick="switchTab('Reception',this)">
+      <span class="ti">🚪</span>受付
+    </button>
+    <button class="tbbtn" id="tb-sum" onclick="switchTab('Sum',this)">
+      <span class="ti">📊</span>集計
+    </button>
+    <button class="tbbtn" id="tb-schedule" onclick="switchTab('Schedule',this)">
+      <span class="ti">📅</span>日程
+    </button>
+    <button class="tbbtn" id="tb-settings" onclick="switchTab('Settings',this)">
+      <span class="ti">⚙️</span>設定
+    </button>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openAddTicket()">＋</button>
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- チケット追加 -->
+<div class="moverlay" id="mAddTicket">
+  <div class="modal">
+    <div class="modal-title">チケット追加</div>
+    <div class="tpills">
+      <button class="tpill pm" id="pill-maeure"   onclick="selType('maeure')">前売り</button>
+      <button class="tpill"    id="pill-okichike"  onclick="selType('okichike')">置きチケ</button>
+    </div>
+    <div class="fg">
+      <label class="flabel" id="buyerLabel">購入者名（任意）</label>
+      <input class="finput" id="iBuyer" type="text" placeholder="お名前" autocomplete="off">
+    </div>
+    <div class="fg">
+      <label class="flabel">枚数</label>
+      <div style="display:flex;align-items:center;gap:16px;padding:4px 0">
+        <button type="button" onclick="stepCount(-1)"
+          style="width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);
+          background:#f5f5f5;font-size:1.4rem;font-weight:300;color:var(--text)">－</button>
+        <span id="iCountDisp" style="font-size:1.6rem;font-weight:700;min-width:32px;text-align:center">1</span>
+        <button type="button" onclick="stepCount(1)"
+          style="width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);
+          background:var(--maeure-l);font-size:1.4rem;font-weight:300;color:var(--maeure)">＋</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="flabel">担当メンバー</label>
+      <select class="fsel" id="iMember">
+        <option value="">選択してください</option>
+      </select>
+    </div>
+    <div class="fg" id="iNoteGroup">
+      <label class="flabel">メモ（任意）</label>
+      <input class="finput" id="iNote" type="text" placeholder="席番号など">
+    </div>
+    <div class="frow">
+      <button class="btn btn-s" style="flex:1" onclick="closeModal('mAddTicket')">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="saveTicket()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 公演追加/編集 -->
+<div class="moverlay" id="mPerf">
+  <div class="modal">
+    <div class="modal-title" id="mPerfTitle">公演を追加</div>
+    <div class="fg">
+      <label class="flabel">公演名</label>
+      <input class="finput" id="iPerfName" type="text" placeholder="例：メゾン・ドゥ・ココル１">
+    </div>
+    <div class="fg">
+      <label class="flabel">略称（タブに表示）</label>
+      <input class="finput" id="iPerfShort" type="text" placeholder="例：S1、夜の部" maxlength="8">
+    </div>
+    <div class="fg">
+      <label class="flabel">日付</label>
+      <input class="finput" id="iPerfDate" type="date">
+    </div>
+    <div class="fg">
+      <label class="flabel">時間</label>
+      <input class="finput" id="iPerfTime" type="time">
+    </div>
+    <div class="fg">
+      <label class="flabel">会場</label>
+      <input class="finput" id="iPerfVenue" type="text" placeholder="会場名">
+    </div>
+    <div class="fg">
+      <label class="flabel">定員（任意）</label>
+      <input class="finput" id="iPerfCap" type="number" placeholder="例：100">
+    </div>
+    <div class="frow">
+      <button class="btn btn-s" style="flex:1" onclick="closeModal('mPerf')">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="savePerf()">保存</button>
+    </div>
+    <div id="mPerfDelRow" style="margin-top:10px;display:none">
+      <button class="btn btn-d btn-blk" onclick="deletePerf()">この公演を削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 担当者追加 -->
+<div class="moverlay" id="mMember">
+  <div class="modal">
+    <div class="modal-title" id="mMemberTitle">メンバーを追加</div>
+    <div class="fg">
+      <label class="flabel">名前</label>
+      <input class="finput" id="iMemberName" type="text" placeholder="名前" autocomplete="off">
+    </div>
+    <div class="frow">
+      <button class="btn btn-s" style="flex:1" onclick="closeModal('mMember')">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" id="mMemberSaveBtn" onclick="saveMember()">追加</button>
+    </div>
+    <div id="mMemberDelRow" style="margin-top:10px;display:none">
+      <button class="btn btn-d btn-blk" onclick="deleteMember()">このメンバーを削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- チケット詳細 -->
+<div class="moverlay" id="mDetail">
+  <div class="modal">
+    <div class="modal-title">チケット詳細</div>
+    <div id="detailContent"></div>
+    <div id="detailSettleRow" style="margin-bottom:8px;display:none">
+      <button class="btn btn-blk" id="detailSettleBtn" onclick="toggleSettle()" style="background:#fff3e0;color:#e65100;font-size:.95rem;"></button>
+    </div>
+    <div class="frow" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-d" style="flex:1;min-width:120px" onclick="toggleCancel()">削除</button>
+      <button class="btn btn-s" style="flex:1;min-width:120px" onclick="closeModal('mDetail')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 日程調整 作成 -->
+<div class="moverlay" id="mCreateSched">
+  <div class="modal">
+    <div class="modal-title">日程調整を作成</div>
+    <div class="fg">
+      <label class="flabel">タイトル</label>
+      <input class="finput" id="iSchedTitle" type="text" placeholder="例：6月稽古日程調整" autocomplete="off">
+    </div>
+    <div class="fg">
+      <label class="flabel">説明（任意）</label>
+      <input class="finput" id="iSchedDesc" type="text" placeholder="補足説明など">
+    </div>
+    <div class="fg">
+      <label class="flabel">日程候補</label>
+      <div id="slotRows"><div style="color:var(--sub);font-size:.82rem;padding:4px 0">候補日を追加してください</div></div>
+      <button type="button" class="btn btn-s" style="margin-top:6px;width:100%;font-size:.85rem" onclick="addSlot()">＋ 候補日を追加</button>
+    </div>
+    <div class="frow">
+      <button class="btn btn-s" style="flex:1" onclick="closeModal('mCreateSched')">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="saveSched()">作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 日程調整 詳細 -->
+<div class="moverlay" id="mSchedDetail">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div class="modal-title" id="mSchedDetailTitle" style="margin-bottom:0;text-align:left;flex:1"></div>
+      <span id="mSchedStatus" class="sched-open"></span>
+    </div>
+    <div id="mSchedDesc" style="font-size:.83rem;color:var(--sub);margin-bottom:10px;"></div>
+    <div id="schedDecided" style="margin-bottom:8px"></div>
+    <div class="sgrid-wrap" id="schedGrid">
+      <div style="text-align:center;padding:16px;color:var(--sub)">読み込み中...</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-blk" style="flex:1;background:var(--maeure-l);color:var(--maeure);font-weight:700;margin-top:0" onclick="openRespond()">✏️ 回答する</button>
+      <button class="btn btn-blk" style="flex:1;background:var(--primary-l);color:var(--primary);font-weight:700;margin-top:0" onclick="openRehearsalPlan()">🎯 稽古日を決める</button>
+    </div>
+    <div class="frow" style="margin-top:8px;flex-wrap:wrap;gap:8px">
+      <button class="btn btn-s" style="flex:1;min-width:100px" onclick="closeModal('mSchedDetail')">閉じる</button>
+      <button class="btn btn-d btn-sm" style="flex:1;min-width:100px" onclick="deleteSched()">🗑 削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 日程調整 回答 -->
+<div class="moverlay" id="mSchedResponse">
+  <div class="modal">
+    <div class="modal-title">出欠を回答</div>
+    <div class="fg">
+      <label class="flabel">お名前</label>
+      <input class="finput" id="iRespName" type="text" placeholder="名前を入力" autocomplete="off"
+        list="memberNameList" oninput="onRespNameInput(this.value)">
+      <datalist id="memberNameList"></datalist>
+      <div id="respEditHint" style="font-size:.75rem;color:var(--oki);margin-top:4px;display:none">※ この名前の回答を上書きします</div>
+    </div>
+    <div class="fg">
+      <label class="flabel">各日程の出欠 <span style="color:var(--sub);font-weight:400">（○可 △△ ×不可）</span></label>
+      <div id="respSlotRows"></div>
+    </div>
+    <div class="fg">
+      <label class="flabel">自由意見 <span style="color:var(--sub);font-weight:400">（任意）</span></label>
+      <textarea class="finput" id="iRespComment" rows="3" placeholder="△の日程の詳細や、その他コメントなど"
+        style="resize:none;line-height:1.5"></textarea>
+    </div>
+    <div class="frow">
+      <button class="btn btn-s" style="flex:1" onclick="closeModal('mSchedResponse')">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="saveResponse()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 脚本 追加/編集 -->
+<div class="moverlay" id="mScriptEdit">
+  <div class="modal">
+    <div class="modal-title" id="mScriptTitle">脚本を追加</div>
+    <div class="fg">
+      <label class="flabel">脚本名</label>
+      <input class="finput" id="iScriptName" type="text" placeholder="例：三人姉妹" autocomplete="off">
+    </div>
+    <div class="fg">
+      <label class="flabel">🎬 演出（複数選択可）</label>
+      <div id="scriptDirChips" style="display:flex;flex-wrap:wrap;gap:7px;padding:4px 0"></div>
+    </div>
+    <div class="fg">
+      <label class="flabel">🎭 役者（複数選択可）</label>
+      <div id="scriptActChips" style="display:flex;flex-wrap:wrap;gap:7px;padding:4px 0"></div>
+    </div>
+    <div class="frow">
+      <button class="btn btn-s" style="flex:1" onclick="closeModal('mScriptEdit')">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="saveScript()">保存</button>
+    </div>
+    <div id="mScriptDelRow" style="margin-top:10px;display:none">
+      <button class="btn btn-d btn-blk" onclick="deleteScript()">この脚本を削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 稽古日決定モーダル -->
+<div class="moverlay" id="mRehearsalPlan">
+  <div class="modal">
+    <div class="modal-title">🎯 稽古日決定</div>
+    <div id="rpTitle" style="text-align:center;font-size:.85rem;color:var(--sub);margin-bottom:10px"></div>
+
+    <!-- チームタブ -->
+    <div id="rpTeamTabs" style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px"></div>
+
+    <!-- 決定済み -->
+    <div id="rpDecidedSection"></div>
+
+    <!-- ランキング -->
+    <div style="font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:6px;letter-spacing:.03em">参加可能日ランキング（上位20件）</div>
+    <div id="rpRankedList" style="max-height:46dvh;overflow-y:auto;margin:0 -2px;padding:0 2px"></div>
+
+    <button class="btn btn-s btn-blk" style="margin-top:12px" onclick="closeModal('mRehearsalPlan')">閉じる</button>
+  </div>
+</div>
+
+<!-- Firebase & Logic -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script>
+// ==================== FIREBASE ====================
+// TODO: Replace with your Firebase project config
+const firebaseConfig = {
+  apiKey: "AIzaSyDwnXaTAKLMr3-rblC2uC7Jp5IJIRgpssI",
+  authDomain: "geki-chike.firebaseapp.com",
+  projectId: "geki-chike",
+  storageBucket: "geki-chike.firebasestorage.app",
+  messagingSenderId: "1088401009975",
+  appId: "1:1088401009975:web:e491373453ad47708cbeb2"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+db.enablePersistence().catch(()=>{});
+
+// ==================== STATE ====================
+let perfId    = null;   // 選択中の公演ID
+let perfs     = [];     // 公演一覧
+let members   = [];     // 担当者一覧
+let tickets   = [];     // 選択公演のチケット
+let allTickets = [];    // 全公演のチケット（集計用）
+let filter    = 'all';  // チケットフィルター
+let curType     = 'maeure'; // 新規追加の種別
+let ticketCount = 1;
+let editPerfId = null;  // 編集中の公演ID
+let detailId  = null;   // 詳細表示中のチケットID
+let sumScope  = 'perf'; // 集計スコープ
+
+let unsubPerfs   = null;
+let unsubMembers = null;
+let unsubTickets = null;
+let unsubAll     = null;
+
+// ==================== INIT ====================
+// ==================== CURRENT MEMBER ====================
+let currentMember = null; // { id, name }
+
+function loadCurrentMember() {
+  try {
+    const s = localStorage.getItem('unitCurrentMember');
+    if(s) currentMember = JSON.parse(s);
+  } catch(e) { currentMember = null; }
+}
+
+function saveCurrentMember(m) {
+  currentMember = m;
+  localStorage.setItem('unitCurrentMember', JSON.stringify(m));
+}
+
+function renderHomeGrid() {
+  const el = document.getElementById('homeGrid');
+  if(!el) return;
+  if(members.length === 0) {
+    el.innerHTML = '<div style="color:rgba(255,255,255,.6);grid-column:1/-1;text-align:center;padding:20px">メンバーを読み込み中...</div>';
+    return;
+  }
+  el.innerHTML = members.map(m => {
+    const initial = [...m.name][0] || '?';
+    const isSel = currentMember?.id === m.id;
+    return `<button class="home-mbtn${isSel?' sel':''}" onclick="selectHomeMember('${m.id}','${esc(m.name)}')">
+      <div class="home-avatar">${esc(initial)}</div>
+      <div class="home-mname">${esc(m.name)}</div>
+    </button>`;
+  }).join('');
+  document.getElementById('homeEnterBtn').disabled = !currentMember;
+}
+
+function selectHomeMember(id, name) {
+  const m = members.find(m => m.id === id);
+  currentMember = { id, name, isAdmin: m?.isAdmin || false };
+  renderHomeGrid();
+  document.getElementById('homeEnterBtn').disabled = false;
+}
+
+function canAdmin() { return currentMember?.isAdmin === true; }
+
+function enterApp() {
+  if(!currentMember) return;
+  saveCurrentMember(currentMember);
+  document.getElementById('homeScreen').classList.add('hidden');
+  updateHdrMember();
+  updateAdminUI();
+}
+
+function updateAdminUI() {
+  const admin = canAdmin();
+  // ヘッダー：＋公演
+  document.getElementById('btnAddPerf').style.display = admin ? '' : 'none';
+  // 設定タブ再描画（管理者トグル含む）
+  renderMemberSettings();
+  renderPerfSettings();
+  renderScriptSettings();
+  // 日程リスト再描画（稽古日を決めるボタン）
+  renderSchedList();
+}
+
+function showHomeScreen() {
+  renderHomeGrid();
+  document.getElementById('homeScreen').classList.remove('hidden');
+}
+
+function updateHdrMember() {
+  const el  = document.getElementById('hdrMember');
+  const av  = document.getElementById('hdrMemberAv');
+  const nm  = document.getElementById('hdrMemberName');
+  if(!currentMember) { el.style.display='none'; return; }
+  av.textContent = [...currentMember.name][0] || '?';
+  nm.textContent = currentMember.name;
+  el.style.display = '';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadCurrentMember();
+  subscribePerfs();
+  subscribeMembers();
+  subscribeAllTickets();
+  subscribeSchedules();
+  subscribeScripts();
+  subscribeAllRehearsals();
+  subscribeAllSchedResponses();
+  document.querySelectorAll('.moverlay').forEach(o => {
+    o.addEventListener('click', e => {
+      if(e.target !== o) return;
+      o.classList.remove('show');
+      if(o.id === 'mSchedDetail' && unsubSchedResp) {
+        unsubSchedResp(); unsubSchedResp = null;
+      }
+    });
+  });
+});
+
+// ==================== SUBSCRIPTIONS ====================
+function subscribePerfs() {
+  if(unsubPerfs) unsubPerfs();
+  unsubPerfs = db.collection('performances').orderBy('createdAt').onSnapshot(snap => {
+    perfs = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    renderPerfSel();
+    renderRecPerfSel();
+    renderPerfSettings();
+    hideLoading();
+    // ホーム画面制御：メンバー未選択なら表示、選択済みならアプリ表示
+    if(currentMember) {
+      document.getElementById('homeScreen').classList.add('hidden');
+      updateHdrMember();
+    } else {
+      showHomeScreen();
+    }
+  }, () => { hideLoading(); showHomeScreen(); });
+}
+
+function subscribeMembers() {
+  if(unsubMembers) unsubMembers();
+  unsubMembers = db.collection('members').onSnapshot(snap => {
+    members = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    members.sort((a,b) => {
+      const ao = a.order ?? Infinity, bo = b.order ?? Infinity;
+      if(ao !== bo) return ao - bo;
+      return (a.createdAt?.seconds||0) - (b.createdAt?.seconds||0);
+    });
+    renderMemberSel();
+    renderMemberSettings();
+    // ホーム画面が表示中ならグリッドも更新
+    if(!document.getElementById('homeScreen').classList.contains('hidden')) {
+      renderHomeGrid();
+    }
+  });
+}
+
+function subscribeTickets(pid) {
+  if(unsubTickets) { unsubTickets(); unsubTickets = null; }
+  if(!pid) { tickets = []; renderAll(); return; }
+  unsubTickets = db.collection('tickets').where('perfId','==',pid).onSnapshot(snap => {
+    tickets = snap.docs.map(d => ({id:d.id, ...d.data()}))
+      .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+    renderAll();
+  });
+}
+
+function subscribeAllTickets() {
+  if(unsubAll) unsubAll();
+  unsubAll = db.collection('tickets').onSnapshot(snap => {
+    allTickets = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    if(sumScope === 'all') renderSummary();
+  });
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.add('hidden');
+}
+
+// ==================== RENDER ALL ====================
+function renderAll() {
+  renderStats();
+  renderTickets();
+  renderReception();
+  renderSummary();
+}
+
+// ==================== PERF SELECT ====================
+function renderPerfSel() {
+  const el = document.getElementById('perfTabs');
+  if(perfs.length === 0) {
+    el.innerHTML = '<div class="perf-tab-empty">公演がありません</div>';
+    return;
+  }
+  el.innerHTML = perfs.map(p => {
+    const label = p.short || (p.name.length > 8 ? p.name.slice(0,8)+'…' : p.name);
+    return `<button class="perf-tab${perfId===p.id?' act':''}" onclick="selectPerf('${p.id}')">${esc(label)}</button>`;
+  }).join('');
+}
+
+function selectPerf(id) {
+  perfId = id;
+  renderPerfSel();
+  subscribeTickets(perfId);
+}
+
+function onPerfChange() {} // 後方互換のため残す
+
+// ==================== STATS ====================
+function cnt(t) { return t.count||1; }
+
+function renderStats() {
+  const sum = arr => arr.reduce((s,t)=>s+cnt(t),0);
+  const total = sum(tickets);
+  document.getElementById('sTotal').textContent    = total;
+  document.getElementById('sMaeure').textContent   = sum(tickets.filter(t=>t.type==='maeure'));
+  document.getElementById('sOki').textContent      = sum(tickets.filter(t=>t.type==='okichike'));
+  // 残席
+  const perf = perfs.find(p=>p.id===perfId);
+  const cap  = perf?.capacity;
+  const remainCard = document.getElementById('sRemainCard');
+  const remainEl   = document.getElementById('sRemain');
+  if(cap) {
+    const remain = cap - total;
+    remainCard.style.display = '';
+    remainEl.textContent = remain;
+    remainEl.style.color = remain <= 0 ? '#c62828' : remain <= 10 ? '#e65100' : '#2e7d32';
+  } else {
+    remainCard.style.display = 'none';
+  }
+}
+
+// ==================== TICKETS VIEW ====================
+function setFilter(f, el) {
+  filter = f;
+  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('act'));
+  el.classList.add('act');
+  renderTickets();
+}
+
+function renderTickets() {
+  const el = document.getElementById('ticketList');
+  if(!perfId) { el.innerHTML = empty('🎫','公演を選択してください'); return; }
+  let list = tickets;
+  if(filter !== 'all') list = tickets.filter(t=>t.type===filter);
+  else                 list = tickets;
+
+  if(list.length === 0) { el.innerHTML = empty('🎫','チケットがありません'); return; }
+  el.innerHTML = list.map(t => {
+    const mn = members.find(m=>m.id===t.memberId)?.name || '（未設定）';
+    const cl = t.status==='cancelled' ? 'titem cancelled' : 'titem';
+    return `<div class="${cl}" onclick="openDetail('${t.id}')">
+      <div style="flex:1;min-width:0">
+        <div class="tbuyer">${t.buyerName ? esc(t.buyerName)+'様' : '（名前なし）'}</div>
+        <div class="tmeta">${esc(mn)} ${t.note?'・'+esc(t.note):''}</div>
+      </div>
+      <div class="tbadges">
+        <span class="badge ${badgeCls(t.type)}">${typeName(t.type)}${cnt(t)>1?' ×'+cnt(t):''}</span>
+        ${t.type==='maeure'?(t.settled?'<span class="settled-badge">精算済</span>':'<span class="unsettled-badge">未精算</span>'):''}
+        ${t.status==='arrived'?'<span class="arrived-badge">受取済</span>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== OKI VIEW ====================
+function renderOki() {
+  const el = document.getElementById('okiList');
+  if(!perfId) { el.innerHTML = empty('📋','公演を選択してください'); return; }
+  const okis = tickets.filter(t=>t.type==='okichike' && t.status!=='cancelled');
+  if(okis.length === 0) { el.innerHTML = empty('📋','置きチケはありません'); return; }
+
+  const arrivedN = okis.filter(t=>t.status==='arrived').length;
+  const sorted = [...okis].sort((a,b) => {
+    if(a.status==='arrived' && b.status!=='arrived') return 1;
+    if(a.status!=='arrived' && b.status==='arrived') return -1;
+    return 0;
+  });
+
+  el.innerHTML = `
+    <div class="oki-hdr">
+      <span style="font-weight:700">置きチケ一覧</span>
+      <span class="oki-prog">${arrivedN} / ${okis.length} 受取済</span>
+    </div>
+    ${sorted.map(t => {
+      const mn = members.find(m=>m.id===t.memberId)?.name || '（未設定）';
+      const done = t.status === 'arrived';
+      return `<div class="oitem ${done?'done':''}">
+        <button class="oci-btn" onclick="toggleArrived('${t.id}','${t.status}')">${done?'✓':'○'}</button>
+        <div style="flex:1;min-width:0">
+          <div class="oname">${t.buyerName ? esc(t.buyerName)+'様' : '（名前なし）'}</div>
+          <div class="ometa">${esc(mn)}${cnt(t)>1?' ×'+cnt(t):''}${t.note?' ・ '+esc(t.note):''}</div>
+        </div>
+        ${done?'<span class="arrived-badge">受取済</span>':''}
+      </div>`;
+    }).join('')}
+  `;
+}
+
+// ==================== SUMMARY VIEW ====================
+function setSumScope(s) {
+  sumScope = s;
+  document.getElementById('scopePerf').classList.toggle('act', s==='perf');
+  document.getElementById('scopeAll').classList.toggle('act',  s==='all');
+  renderSummary();
+}
+
+function renderSummary() {
+  const el = document.getElementById('sumContent');
+  const src = sumScope === 'all' ? allTickets : tickets;
+
+  if(sumScope === 'perf' && !perfId) {
+    el.innerHTML = empty('📊','公演を選択してください'); return;
+  }
+  const active = src;
+  if(active.length === 0) { el.innerHTML = empty('📊','データがありません'); return; }
+
+  // Per-member stats
+  const stats = {};
+  members.forEach(m => { stats[m.id] = {name:m.name, maeure:0, okichike:0, unsettled:0, total:0}; });
+  stats['_'] = {name:'（未設定）', maeure:0, okichike:0, unsettled:0, total:0};
+  active.forEach(t => {
+    const k = stats[t.memberId] ? t.memberId : '_';
+    stats[k][t.type] += cnt(t); stats[k].total += cnt(t);
+    if(t.type==='maeure' && !t.settled) stats[k].unsettled += cnt(t);
+  });
+  const rows = Object.values(stats).filter(s=>s.total>0).sort((a,b)=>b.total-a.total);
+
+  const sumBy = type => active.filter(t=>t.type===type).reduce((s,t)=>s+cnt(t),0);
+  const tot = {
+    maeure:  sumBy('maeure'),
+    okichike:sumBy('okichike'),
+    total:   active.reduce((s,t)=>s+cnt(t),0)
+  };
+
+  const totalUnsettled = active.filter(t=>t.type==='maeure'&&!t.settled).reduce((s,t)=>s+cnt(t),0);
+
+  const colHdr = `
+    <div class="sum-row" style="padding-top:0">
+      <div style="flex:1"></div>
+      <div class="sum-cols">
+        <div class="scol"><div class="scol-l" style="color:var(--maeure)">前売</div></div>
+        <div class="scol"><div class="scol-l" style="color:var(--oki)">置チケ</div></div>
+        <div class="scol"><div class="scol-l" style="color:#e65100">未精算</div></div>
+        <div class="scol"><div class="scol-l">合計</div></div>
+      </div>
+    </div>`;
+
+  const memberRows = rows.map(r => `
+    <div class="sum-row">
+      <div class="sum-name">${esc(r.name)}</div>
+      <div class="sum-cols">
+        <div class="scol"><div class="scol-n" style="color:var(--maeure)">${r.maeure||'—'}</div></div>
+        <div class="scol"><div class="scol-n" style="color:var(--oki)">${r.okichike||'—'}</div></div>
+        <div class="scol"><div class="scol-n" style="color:#e65100;font-weight:${r.unsettled?800:400}">${r.unsettled||'—'}</div></div>
+        <div class="scol"><div class="scol-n" style="font-weight:800">${r.total}</div></div>
+      </div>
+    </div>`).join('');
+
+  const totalRow = `
+    <div class="sum-total">
+      <div class="sum-name">合計</div>
+      <div class="sum-cols">
+        <div class="scol"><div class="scol-n" style="color:var(--maeure)">${tot.maeure}</div></div>
+        <div class="scol"><div class="scol-n" style="color:var(--oki)">${tot.okichike}</div></div>
+        <div class="scol"><div class="scol-n" style="color:#e65100;font-weight:${totalUnsettled?800:400}">${totalUnsettled||'—'}</div></div>
+        <div class="scol"><div class="scol-n" style="font-weight:800">${tot.total}</div></div>
+      </div>
+    </div>`;
+
+  // 公演ごとの内訳（全公演スコープ時）
+  let perfBreakdown = '';
+  if(sumScope === 'all' && perfs.length > 0) {
+    perfBreakdown = `<div class="sec-lbl" style="margin-top:16px">公演別内訳</div>
+    <div class="card">
+      ${perfs.map(p => {
+        const pt = allTickets.filter(t=>t.perfId===p.id && t.status!=='cancelled');
+        const pm = pt.filter(t=>t.type==='maeure').reduce((s,t)=>s+cnt(t),0);
+        const po = pt.filter(t=>t.type==='okichike').reduce((s,t)=>s+cnt(t),0);
+        const total = pt.reduce((s,t)=>s+cnt(t),0);
+        return `<div class="sum-row">
+          <div class="sum-name" style="font-size:.88rem">${esc(p.name)}</div>
+          <div class="sum-cols">
+            <div class="scol"><div class="scol-n" style="color:var(--maeure)">${pm||'—'}</div></div>
+            <div class="scol"><div class="scol-n" style="color:var(--oki)">${po||'—'}</div></div>
+            <div class="scol"><div class="scol-n" style="font-weight:800">${total}</div></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-title">メンバー別集計</div>
+      ${colHdr}
+      ${memberRows}
+    </div>
+    ${totalRow}
+    ${perfBreakdown}
+  `;
+}
+
+// ==================== SETTINGS ====================
+function renderPerfSettings() {
+  const el = document.getElementById('perfListEl');
+  const admin = canAdmin();
+  if(perfs.length === 0) {
+    el.innerHTML = `<div style="color:var(--sub);font-size:.88rem;padding:6px 0">公演がありません</div>`
+      + (admin ? `<button class="btn btn-s btn-blk" onclick="openAddPerf()">＋ 公演を追加</button>` : '');
+    return;
+  }
+  el.innerHTML = perfs.map(p => `
+    <div class="sitem">
+      <div class="sitem-info">
+        <div class="sitem-name">${esc(p.name)}</div>
+        <div class="sitem-sub">${p.date||''}${p.time?' '+p.time:''} ${p.venue?'/ '+p.venue:''}</div>
+      </div>
+      <div class="sitem-acts">
+        ${admin ? `<button class="btn btn-s btn-sm" onclick="editPerf('${p.id}')">編集</button>` : ''}
+      </div>
+    </div>
+  `).join('') + (admin ? `<button class="btn btn-s btn-blk" onclick="openAddPerf()">＋ 公演を追加</button>` : '');
+}
+
+function renderMemberSettings() {
+  const el = document.getElementById('memberListEl');
+  if(members.length === 0) {
+    el.innerHTML = `<div style="color:var(--sub);font-size:.88rem;padding:6px 0">メンバーがいません</div>
+      <button class="btn btn-s btn-blk" onclick="openAddMember()">＋ メンバーを追加</button>`;
+    return;
+  }
+  const adminArea = canAdmin();
+  el.innerHTML = members.map((m, idx) => `
+    <div class="sitem">
+      <div class="sitem-info">
+        <div class="sitem-name">${esc(m.name)}</div>
+        ${m.isAdmin ? '<span style="font-size:.68rem;background:#fff3e0;color:#e65100;border-radius:4px;padding:1px 6px;font-weight:700;">管理者</span>' : ''}
+      </div>
+      <div class="sitem-acts">
+        ${adminArea ? `
+        <button class="btn btn-s btn-sm" style="padding:6px 9px" onclick="moveMember('${m.id}',-1)" ${idx===0?'disabled':''}>↑</button>
+        <button class="btn btn-s btn-sm" style="padding:6px 9px" onclick="moveMember('${m.id}',1)" ${idx===members.length-1?'disabled':''}>↓</button>
+        <button class="btn btn-s btn-sm" onclick="openEditMember('${m.id}')">編集</button>
+        <button class="btn btn-s btn-sm" style="${m.isAdmin?'background:#fff3e0;color:#e65100;':'background:#f5f5f5;color:#888;'}"
+          onclick="toggleAdmin('${m.id}',${!m.isAdmin})">${m.isAdmin?'🔑管':'🔑'}
+        </button>` : ''}
+      </div>
+    </div>
+  `).join('') + (adminArea ? `<button class="btn btn-s btn-blk" onclick="openAddMember()">＋ メンバーを追加</button>` : '');
+}
+
+function renderMemberSel() {
+  const sel = document.getElementById('iMember');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">選択してください</option>';
+  members.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.name;
+    sel.appendChild(opt);
+  });
+  if(cur) sel.value = cur;
+}
+
+// ==================== TAB SWITCH ====================
+function switchTab(tab, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('act'));
+  document.querySelectorAll('.tbbtn').forEach(b => b.classList.remove('act'));
+  document.getElementById('v'+tab).classList.add('act');
+  el.classList.add('act');
+  document.getElementById('fab').style.display = tab === 'Tickets' ? 'flex' : 'none';
+  if(tab === 'Reception') { recSearch = ''; renderRecPerfSel(); renderReception(); }
+  document.getElementById('content').scrollTop = 0;
+}
+
+// ==================== TICKET MODAL ====================
+function openAddTicket() {
+  if(!perfId) { alert('公演を選択してください'); return; }
+  curType = 'maeure';
+  updatePills();
+  document.getElementById('buyerLabel').textContent = '購入者名（任意）';
+  document.getElementById('iBuyer').value = '';
+  ticketCount = 1;
+  document.getElementById('iCountDisp').textContent = '1';
+  document.getElementById('iNote').value = '';
+  // ログイン中のメンバーを担当として自動選択（変更不可）
+  const sel = document.getElementById('iMember');
+  sel.value = currentMember?.id || '';
+  sel.disabled = !!currentMember;
+  document.getElementById('mAddTicket').classList.add('show');
+  setTimeout(() => document.getElementById('iBuyer').focus(), 120);
+}
+
+function stepCount(d) {
+  ticketCount = Math.max(1, ticketCount + d);
+  document.getElementById('iCountDisp').textContent = ticketCount;
+}
+
+function selType(t) {
+  curType = t;
+  updatePills();
+  document.getElementById('buyerLabel').textContent =
+    t === 'okichike' ? '購入者名（必須）' : '購入者名（任意）';
+}
+
+function updatePills() {
+  const cls = {maeure:'pm', okichike:'po'};
+  ['maeure','okichike'].forEach(t => {
+    const btn = document.getElementById('pill-'+t);
+    btn.className = 'tpill' + (t===curType ? ' '+cls[t] : '');
+  });
+}
+
+async function saveTicket() {
+  const buyer = document.getElementById('iBuyer').value.trim();
+  const sel = document.getElementById('iMember');
+  const memberId = sel.disabled ? (currentMember?.id || '') : sel.value;
+  const count = ticketCount;
+  const note = document.getElementById('iNote').value.trim();
+  if(curType === 'okichike' && !buyer) { alert('置きチケは購入者名を入力してください'); return; }
+  if(!memberId) { alert('メンバーを選択してください'); return; }
+  closeModal('mAddTicket');
+  await db.collection('tickets').add({
+    perfId, memberId, buyerName: buyer||'', count, type: curType,
+    status: 'active', note: note||'',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+// ==================== RECEPTION VIEW ====================
+let recPerfId = null;
+let recTickets = [];
+let recData = {};          // { maeureEntered: N }
+let unsubRecTickets = null;
+let unsubRecData = null;
+
+function subscribeRecTickets(pid) {
+  if(unsubRecTickets) { unsubRecTickets(); unsubRecTickets = null; }
+  if(unsubRecData)    { unsubRecData();    unsubRecData    = null; }
+  if(!pid) { recTickets = []; recData = {}; renderReception(); return; }
+  unsubRecTickets = db.collection('tickets').where('perfId','==',pid).onSnapshot(snap => {
+    recTickets = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderReception();
+  });
+  unsubRecData = db.collection('reception').doc(pid).onSnapshot(snap => {
+    recData = snap.exists ? snap.data() : {};
+    renderReception();
+  });
+}
+
+function onRecPerfChange() {
+  recPerfId = document.getElementById('recPerfSel').value || null;
+  subscribeRecTickets(recPerfId);
+}
+
+function renderRecPerfSel() {
+  const sel = document.getElementById('recPerfSel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- 公演を選択 --</option>';
+  perfs.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name + (p.date ? ` (${p.date}${p.time?' '+p.time:''})` : '');
+    sel.appendChild(opt);
+  });
+  if(cur && perfs.find(p=>p.id===cur)) sel.value = cur;
+}
+
+function renderReception() {
+  const el = document.getElementById('receptionContent');
+  if(!recPerfId) { el.innerHTML = empty('🚪','公演を選択してください'); return; }
+
+  // 前売り
+  const maeureTotal   = recTickets.filter(t=>t.type==='maeure').reduce((s,t)=>s+cnt(t),0);
+  const maeureEntered = recData.maeureEntered || 0;
+  const tojitsuEntered  = recData.tojitsuEntered  || 0;
+  const shoutaiEntered  = recData.shoutaiEntered  || 0;
+
+  // 置きチケ
+  const okis = recTickets.filter(t=>t.type==='okichike');
+  const okiSorted = [...okis].sort((a,b)=>{
+    if(a.entered && !b.entered) return 1;
+    if(!a.entered && b.entered) return -1;
+    return 0;
+  });
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title" style="color:var(--maeure)">前売り入場カウント</div>
+      <div class="rec-counter-row">
+        <button class="rec-cnt-btn rec-cnt-minus" onclick="changeMaeure(-1)">－</button>
+        <div class="rec-cnt-display">
+          <span class="rec-cnt-n" id="cntMaeure">${maeureEntered}</span>
+          <span class="rec-cnt-total">/ ${maeureTotal}</span>
+        </div>
+        <button class="rec-cnt-btn rec-cnt-plus" onclick="changeMaeure(1)">＋</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title" style="color:var(--tojitsu)">当日券入場カウント</div>
+      <div class="rec-counter-row">
+        <button class="rec-cnt-btn rec-cnt-minus" onclick="changeTojitsu(-1)">－</button>
+        <div class="rec-cnt-display">
+          <span class="rec-cnt-n" id="cntTojitsu" style="color:var(--tojitsu)">${tojitsuEntered}</span>
+        </div>
+        <button class="rec-cnt-btn" onclick="changeTojitsu(1)" style="background:var(--tojitsu-l);color:var(--tojitsu)">＋</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title" style="color:#7b1fa2">招待券入場カウント</div>
+      <div class="rec-counter-row">
+        <button class="rec-cnt-btn rec-cnt-minus" onclick="changeShoutai(-1)">－</button>
+        <div class="rec-cnt-display">
+          <span class="rec-cnt-n" id="cntShoutai" style="color:#7b1fa2">${shoutaiEntered}</span>
+        </div>
+        <button class="rec-cnt-btn" onclick="changeShoutai(1)" style="background:#f3e5f5;color:#7b1fa2">＋</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color:var(--oki)">置きチケ受取確認
+        <span style="font-weight:400;font-size:.8rem;color:var(--sub);margin-left:8px">${okis.filter(t=>t.entered).length} / ${okis.length}</span>
+      </div>
+      ${okis.length === 0
+        ? `<div style="color:var(--sub);font-size:.88rem;padding:4px 0">置きチケはありません</div>`
+        : okiSorted.map(t => {
+            const mn = members.find(m=>m.id===t.memberId)?.name || '';
+            const done = !!t.entered;
+            return `<div class="oitem ${done?'done':''}">
+              <button class="oci-btn" onclick="toggleOkiEntered('${t.id}',${done})">${done?'✓':'○'}</button>
+              <div style="flex:1;min-width:0">
+                <div class="oname">${t.buyerName ? esc(t.buyerName)+'様' : '（名前なし）'}</div>
+                <div class="ometa">${esc(mn)}</div>
+              </div>
+              ${done?'<span class="arrived-badge">受取済</span>':''}
+            </div>`;
+          }).join('')
+      }
+    </div>
+  `;
+}
+
+async function changeMaeure(delta) {
+  const cur = recData.maeureEntered || 0;
+  const next = Math.max(0, cur + delta);
+  if(next === cur) return;
+  recData.maeureEntered = next;
+  renderReception();
+  const el = document.getElementById('cntMaeure');
+  if(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  if(navigator.vibrate) navigator.vibrate(30);
+  await db.collection('reception').doc(recPerfId).set({ maeureEntered: next }, { merge: true });
+}
+
+async function changeShoutai(delta) {
+  const cur = recData.shoutaiEntered || 0;
+  const next = Math.max(0, cur + delta);
+  if(next === cur) return;
+  recData.shoutaiEntered = next;
+  renderReception();
+  const el = document.getElementById('cntShoutai');
+  if(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  if(navigator.vibrate) navigator.vibrate(30);
+  await db.collection('reception').doc(recPerfId).set({ shoutaiEntered: next }, { merge: true });
+}
+
+async function changeTojitsu(delta) {
+  const cur = recData.tojitsuEntered || 0;
+  const next = Math.max(0, cur + delta);
+  if(next === cur) return;
+  recData.tojitsuEntered = next;
+  renderReception();
+  const el = document.getElementById('cntTojitsu');
+  if(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  if(navigator.vibrate) navigator.vibrate(30);
+  await db.collection('reception').doc(recPerfId).set({ tojitsuEntered: next }, { merge: true });
+}
+
+async function toggleOkiEntered(id, cur) {
+  await db.collection('tickets').doc(id).update({ entered: !cur });
+}
+
+// ==================== OKI TOGGLE ====================
+async function toggleArrived(id, cur) {
+  const ns = cur === 'arrived' ? 'active' : 'arrived';
+  await db.collection('tickets').doc(id).update({status: ns});
+}
+
+// ==================== TICKET DETAIL ====================
+function openDetail(id) {
+  detailId = id;
+  const t = tickets.find(t=>t.id===id);
+  if(!t) return;
+  const mn = members.find(m=>m.id===t.memberId)?.name || '（未設定）';
+  const perf = perfs.find(p=>p.id===t.perfId);
+  const cancelled = t.status==='cancelled';
+  document.getElementById('detailContent').innerHTML = `
+    <div style="text-align:center;padding:8px 0 14px">
+      <div style="font-size:1.3rem;font-weight:700;margin-bottom:6px">${t.buyerName ? esc(t.buyerName)+'様' : '（名前なし）'}</div>
+      <span class="badge ${badgeCls(t.type)}">${typeName(t.type)}</span>
+      ${t.status==='arrived'?'&nbsp;<span class="arrived-badge">受取済</span>':''}
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--sub)">担当</span><span style="font-weight:600">${esc(mn)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--sub)">種別</span><span style="font-weight:600">${typeName(t.type)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--sub)">公演</span><span style="font-weight:600">${esc(perf?.name||'不明')}</span>
+      </div>
+      ${t.note?`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--sub)">メモ</span><span style="font-weight:600">${esc(t.note)}</span>
+      </div>`:''}
+      <div style="display:flex;justify-content:space-between;padding:7px 0">
+        <span style="color:var(--sub)">状態</span><span style="font-weight:600">${statusName(t.status)}</span>
+      </div>
+    </div>
+  `;
+  const settleRow = document.getElementById('detailSettleRow');
+  const settleBtn = document.getElementById('detailSettleBtn');
+  if(t.type === 'maeure') {
+    settleRow.style.display = 'block';
+    settleBtn.textContent = t.settled ? '✓ 精算済み　（取り消す）' : '💴 精算済みにする';
+    settleBtn.style.background = t.settled ? '#f5f5f5' : '#fff3e0';
+    settleBtn.style.color = t.settled ? '#9e9e9e' : '#e65100';
+  } else {
+    settleRow.style.display = 'none';
+  }
+  document.getElementById('mDetail').classList.add('show');
+}
+
+async function toggleSettle() {
+  const t = tickets.find(t=>t.id===detailId);
+  if(!t) return;
+  const msg = t.settled
+    ? '精算済みを取り消しますか？'
+    : '精算済みにしますか？\n会計担当への引き渡しが完了した場合のみ実行してください。';
+  if(!confirm(msg)) return;
+  await db.collection('tickets').doc(detailId).update({ settled: !t.settled });
+  closeModal('mDetail');
+}
+
+async function toggleCancel() {
+  if(!confirm('このチケットを削除しますか？\nこの操作は元に戻せません。')) return;
+  closeModal('mDetail');
+  await db.collection('tickets').doc(detailId).delete();
+}
+
+// ==================== PERF MODAL ====================
+function openAddPerf() {
+  editPerfId = null;
+  document.getElementById('mPerfTitle').textContent = '公演を追加';
+  document.getElementById('iPerfName').value  = '';
+  document.getElementById('iPerfShort').value = '';
+  document.getElementById('iPerfDate').value  = '';
+  document.getElementById('iPerfTime').value  = '';
+  document.getElementById('iPerfVenue').value = '';
+  document.getElementById('iPerfCap').value   = '';
+  document.getElementById('mPerfDelRow').style.display = 'none';
+  document.getElementById('mPerf').classList.add('show');
+}
+
+function editPerf(id) {
+  const p = perfs.find(p=>p.id===id);
+  if(!p) return;
+  editPerfId = id;
+  document.getElementById('mPerfTitle').textContent = '公演を編集';
+  document.getElementById('iPerfName').value  = p.name||'';
+  document.getElementById('iPerfShort').value = p.short||'';
+  document.getElementById('iPerfDate').value  = p.date||'';
+  document.getElementById('iPerfTime').value  = p.time||'';
+  document.getElementById('iPerfVenue').value = p.venue||'';
+  document.getElementById('iPerfCap').value   = p.capacity||'';
+  document.getElementById('mPerfDelRow').style.display = 'block';
+  document.getElementById('mPerf').classList.add('show');
+}
+
+async function savePerf() {
+  const name = document.getElementById('iPerfName').value.trim();
+  if(!name) { alert('公演名を入力してください'); return; }
+  const data = {
+    name,
+    short:    document.getElementById('iPerfShort').value.trim(),
+    date:     document.getElementById('iPerfDate').value,
+    time:     document.getElementById('iPerfTime').value,
+    venue:    document.getElementById('iPerfVenue').value.trim(),
+    capacity: parseInt(document.getElementById('iPerfCap').value)||null
+  };
+  closeModal('mPerf');
+  if(editPerfId) {
+    await db.collection('performances').doc(editPerfId).update(data);
+  } else {
+    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('performances').add(data);
+  }
+}
+
+async function deletePerf() {
+  if(!editPerfId) return;
+  const p = perfs.find(p=>p.id===editPerfId);
+  if(!confirm(`「${p?.name||'この公演'}」を削除しますか？\nチケットデータは残ります。`)) return;
+  closeModal('mPerf');
+  await db.collection('performances').doc(editPerfId).delete();
+}
+
+// ==================== MEMBER MODAL ====================
+let editMemberId = null;
+
+function openAddMember() {
+  editMemberId = null;
+  document.getElementById('mMemberTitle').textContent = 'メンバーを追加';
+  document.getElementById('mMemberSaveBtn').textContent = '追加';
+  document.getElementById('iMemberName').value = '';
+  document.getElementById('mMemberDelRow').style.display = 'none';
+  document.getElementById('mMember').classList.add('show');
+  setTimeout(() => document.getElementById('iMemberName').focus(), 120);
+}
+
+function openEditMember(id) {
+  const m = members.find(m=>m.id===id);
+  if(!m) return;
+  editMemberId = id;
+  document.getElementById('mMemberTitle').textContent = 'メンバーを編集';
+  document.getElementById('mMemberSaveBtn').textContent = '保存';
+  document.getElementById('iMemberName').value = m.name;
+  document.getElementById('mMemberDelRow').style.display = 'block';
+  document.getElementById('mMember').classList.add('show');
+  setTimeout(() => document.getElementById('iMemberName').focus(), 120);
+}
+
+async function saveMember() {
+  const name = document.getElementById('iMemberName').value.trim();
+  if(!name) { alert('名前を入力してください'); return; }
+  closeModal('mMember');
+  if(editMemberId) {
+    await db.collection('members').doc(editMemberId).update({ name });
+  } else {
+    await db.collection('members').add({
+      name,
+      order: members.length,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+}
+
+async function moveMember(id, dir) {
+  const idx = members.findIndex(m => m.id === id);
+  const swapIdx = idx + dir;
+  if(swapIdx < 0 || swapIdx >= members.length) return;
+
+  // Ensure all members have order values, then swap
+  const batch = db.batch();
+  members.forEach((m, i) => {
+    if(m.order === undefined) batch.update(db.collection('members').doc(m.id), { order: i });
+  });
+  const aOrd = members[idx].order    ?? idx;
+  const bOrd = members[swapIdx].order ?? swapIdx;
+  batch.update(db.collection('members').doc(id),                { order: bOrd });
+  batch.update(db.collection('members').doc(members[swapIdx].id), { order: aOrd });
+  await batch.commit();
+}
+
+async function deleteMember() {
+  const m = members.find(m=>m.id===editMemberId);
+  if(!confirm(`「${m?.name||'このメンバー'}」を削除しますか？`)) return;
+  closeModal('mMember');
+  await db.collection('members').doc(editMemberId).delete();
+}
+
+async function delMember(id, name) {
+  if(!confirm(`「${name}」を削除しますか？`)) return;
+  await db.collection('members').doc(id).delete();
+}
+
+async function toggleAdmin(id, makeAdmin) {
+  const m = members.find(m=>m.id===id);
+  if(!m) return;
+  const label = makeAdmin ? '管理者にする' : '管理者を解除する';
+  if(!confirm(`「${m.name}」を${label}しますか？`)) return;
+  await db.collection('members').doc(id).update({ isAdmin: makeAdmin });
+  // 自分自身の権限が変わった場合は currentMember も更新
+  if(currentMember?.id === id) {
+    currentMember.isAdmin = makeAdmin;
+    saveCurrentMember(currentMember);
+    updateHdrMember();
+    updateAdminUI();
+  }
+}
+
+// ==================== HELPERS ====================
+function typeName(t) {
+  return {maeure:'前売り', okichike:'置きチケ', tojitsu:'当日券'}[t] || t;
+}
+function statusName(s) {
+  return {active:'有効', arrived:'受取済', cancelled:'キャンセル'}[s] || s;
+}
+function badgeCls(t) {
+  return {maeure:'bm', okichike:'bo', tojitsu:'bt'}[t] || '';
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function empty(ic, msg) {
+  return `<div class="empty"><div class="empty-ic">${ic}</div><div>${msg}</div></div>`;
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+  if(id === 'mSchedDetail') {
+    if(unsubSchedResp)       { unsubSchedResp();       unsubSchedResp       = null; }
+    if(unsubDetailRehearsal) { unsubDetailRehearsal(); unsubDetailRehearsal = null; }
+  }
+  if(id === 'mRehearsalPlan' && unsubRehearsal) {
+    unsubRehearsal(); unsubRehearsal = null;
+  }
+}
+
+// ==================== SCHEDULES ====================
+let schedules    = [];
+let curSchedId   = null;
+let schedResp    = [];   // responses for current schedule
+let editSlots    = [];   // slots being edited in create modal
+let respAnswers  = {};   // { slotId: 'ok'|'maybe'|'ng' }
+let unsubScheds  = null;
+let unsubSchedResp = null;
+
+function subscribeSchedules() {
+  if(unsubScheds) unsubScheds();
+  unsubScheds = db.collection('schedules').orderBy('createdAt','desc').onSnapshot(snap => {
+    schedules = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderSchedList();
+  }, () => { renderSchedList(); });
+}
+
+function renderSchedList() {
+  const el = document.getElementById('schedListContent');
+  const admin = canAdmin();
+  const createBtn = admin ? `<button class="btn btn-s btn-blk" style="margin-top:8px" onclick="openCreateSched()">＋ 日程調整を作成</button>` : '';
+  if(schedules.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-ic">📅</div><div>日程調整はありません</div></div>${createBtn}`;
+    return;
+  }
+  el.innerHTML = schedules.map(s => {
+    const isClosed = s.status === 'closed';
+    return `<div class="sched-card" onclick="openSchedDetail('${s.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:1rem;margin-bottom:3px">${esc(s.title)}</div>
+          ${s.description ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:3px">${esc(s.description)}</div>` : ''}
+          <div style="font-size:.75rem;color:var(--sub)">日程候補 ${(s.slots||[]).length}件</div>
+        </div>
+        <span class="${isClosed?'sched-closed':'sched-open'}">${isClosed?'締切済':'回答受付中'}</span>
+      </div>
+      ${admin ? `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+        <button class="btn btn-blk" style="width:100%;background:var(--primary-l);color:var(--primary);font-weight:700;font-size:.85rem;padding:8px"
+          onclick="openRehearsalPlanFor('${s.id}',event)">🎯 稽古日を決める</button>
+      </div>` : ''}
+    </div>`;
+  }).join('') + createBtn;
+}
+
+// ---- Detail ----
+function openSchedDetail(id) {
+  curSchedId = id;
+  const s = schedules.find(s=>s.id===id);
+  if(!s) return;
+  document.getElementById('mSchedDetailTitle').textContent = s.title;
+  document.getElementById('mSchedDesc').textContent = s.description || '';
+  const statusEl = document.getElementById('mSchedStatus');
+  statusEl.className = s.status==='closed' ? 'sched-closed' : 'sched-open';
+  statusEl.textContent = s.status==='closed' ? '締切済' : '回答受付中';
+  document.getElementById('schedGrid').innerHTML = '<div style="text-align:center;padding:16px;color:var(--sub)">読み込み中...</div>';
+  document.getElementById('schedDecided').innerHTML = '';
+  // 管理者のみ表示するボタン
+  const admin = canAdmin();
+  document.querySelector('#mSchedDetail .btn-blk[onclick="openRehearsalPlan()"]').style.display = admin ? '' : 'none';
+  document.querySelector('#mSchedDetail .btn-d[onclick="deleteSched()"]').style.display = admin ? '' : 'none';
+  document.getElementById('mSchedDetail').classList.add('show');
+  subscribeSchedResponses(id);
+  subscribeDetailRehearsals(id);
+}
+
+function subscribeSchedResponses(id) {
+  if(unsubSchedResp) { unsubSchedResp(); unsubSchedResp = null; }
+  unsubSchedResp = db.collection('scheduleResponses')
+    .where('scheduleId','==',id)
+    .onSnapshot(snap => {
+      schedResp = snap.docs.map(d => ({id:d.id,...d.data()}))
+        .sort((a,b) => (a.updatedAt?.seconds||0) - (b.updatedAt?.seconds||0));
+      renderSchedGrid();
+      if(document.getElementById('mRehearsalPlan')?.classList.contains('show')) renderRpRanked();
+    }, () => { renderSchedGrid(); });
+}
+
+function renderSchedGrid() {
+  const s = schedules.find(s=>s.id===curSchedId);
+  if(!s) return;
+  const el = document.getElementById('schedGrid');
+  const slots = s.slots || [];
+  if(slots.length === 0) {
+    el.innerHTML = '<div style="color:var(--sub);font-size:.88rem;padding:8px 0">候補日がありません</div>';
+    return;
+  }
+
+  const symMap = {ok:'○', maybe:'△', ng:'×'};
+  const clsMap = {ok:'ok-c', maybe:'mb-c', ng:'ng-c'};
+
+  // Count per slot
+  const okCnt = {}, mbCnt = {};
+  slots.forEach(sl => { okCnt[sl.id]=0; mbCnt[sl.id]=0; });
+  schedResp.forEach(r => {
+    Object.entries(r.answers||{}).forEach(([sid,ans]) => {
+      if(ans==='ok')    okCnt[sid] = (okCnt[sid]||0)+1;
+      if(ans==='maybe') mbCnt[sid] = (mbCnt[sid]||0)+1;
+    });
+  });
+  const maxOk = Math.max(0, ...slots.map(sl=>okCnt[sl.id]||0));
+
+  const headerCells = slots.map(sl =>
+    `<th>${esc(sl.dateLabel)}<br>${sl.timeLabel ? `<span style="font-weight:400">${esc(sl.timeLabel)}</span>` : ''}</th>`
+  ).join('');
+
+  const hasComment = schedResp.some(r => r.comment);
+  const bodyRows = schedResp.length === 0
+    ? `<tr><td class="nc" style="color:var(--sub)">—</td>${slots.map(()=>'<td style="color:var(--sub)">—</td>').join('')}${hasComment?'<td>—</td>':''}</tr>`
+    : schedResp.map(r =>
+        `<tr>
+          <td class="nc">${esc(r.memberName)}</td>
+          ${hasComment ? `<td style="font-size:.72rem;color:var(--sub);text-align:left;min-width:90px;max-width:150px;white-space:pre-wrap;vertical-align:top;padding-top:8px">${esc(r.comment||'')}</td>` : ''}
+          ${slots.map(sl => {
+            const ans = (r.answers||{})[sl.id]||'';
+            return `<td class="${clsMap[ans]||''}">${symMap[ans]||'—'}</td>`;
+          }).join('')}
+        </tr>`
+      ).join('');
+
+  const footCells = slots.map(sl => {
+    const ok = okCnt[sl.id]||0;
+    const mb = mbCnt[sl.id]||0;
+    const best = ok===maxOk && maxOk>0;
+    return `<td style="${best?'background:#e8f5e9;':''}">`
+      +`<span style="color:var(--maeure);font-weight:700">${ok}</span>`
+      +(mb ? `<span style="color:#f57c00;font-size:.72rem"> +${mb}</span>` : '')
+      +`</td>`;
+  }).join('');
+
+  el.innerHTML = `<table class="sgrid">
+    <thead><tr><th class="nc">名前</th>${hasComment?'<th style="text-align:left;min-width:90px">コメント</th>':''}${headerCells}</tr></thead>
+    <tbody>${bodyRows}</tbody>
+    <tfoot><tr><td class="nc">○/△</td>${hasComment?'<td></td>':''}${footCells}</tr></tfoot>
+  </table>`;
+}
+
+// ---- Respond ----
+function openRespond() {
+  const s = schedules.find(s=>s.id===curSchedId);
+  if(!s) return;
+
+  // Populate name datalist from members
+  document.getElementById('memberNameList').innerHTML =
+    members.map(m=>`<option value="${esc(m.name)}">`).join('');
+
+  // ログイン中メンバー優先、なければlocalStorage
+  const savedName = currentMember?.name || localStorage.getItem('schedRespName') || '';
+  document.getElementById('iRespName').value = savedName;
+
+  // Init answers
+  respAnswers = {};
+
+  // Render slot rows
+  const slots = s.slots || [];
+  document.getElementById('respSlotRows').innerHTML = slots.map(sl =>
+    `<div class="ans-row">
+      <div class="ans-lbl">${esc(sl.dateLabel)}${sl.timeLabel?`<br><small style="color:var(--sub);font-weight:400">${esc(sl.timeLabel)}</small>`:''}</div>
+      <div class="ans-btns">
+        <button class="ans-btn" data-slot="${sl.id}" data-ans="ok"    onclick="selAns(this)">○</button>
+        <button class="ans-btn" data-slot="${sl.id}" data-ans="maybe" onclick="selAns(this)">△</button>
+        <button class="ans-btn" data-slot="${sl.id}" data-ans="ng"    onclick="selAns(this)">×</button>
+      </div>
+    </div>`
+  ).join('');
+
+  // If saved name has existing response, pre-fill
+  if(savedName) loadExistingAnswers(savedName);
+
+  const nameInput = document.getElementById('iRespName');
+  nameInput.readOnly = !!currentMember;
+  nameInput.style.background = currentMember ? '#f5f5f5' : '';
+  nameInput.style.color = currentMember ? '#555' : '';
+  document.getElementById('mSchedResponse').classList.add('show');
+  if(!currentMember) setTimeout(() => nameInput.focus(), 120);
+}
+
+function onRespNameInput(name) {
+  loadExistingAnswers(name);
+}
+
+function loadExistingAnswers(name) {
+  const existing = schedResp.find(r => r.memberName === name);
+  const hint = document.getElementById('respEditHint');
+  hint.style.display = existing ? 'block' : 'none';
+
+  // Reset all buttons
+  document.querySelectorAll('.ans-btn').forEach(b => b.className = 'ans-btn');
+  respAnswers = {};
+
+  if(existing && existing.answers) {
+    respAnswers = {...existing.answers};
+    Object.entries(respAnswers).forEach(([sid,ans]) => {
+      document.querySelectorAll(`[data-slot="${sid}"]`).forEach(b => {
+        if(b.dataset.ans === ans)
+          b.classList.add(ans==='ok'?'a-ok':ans==='maybe'?'a-mb':'a-ng');
+      });
+    });
+  }
+  // コメントも復元
+  document.getElementById('iRespComment').value = existing?.comment || '';
+}
+
+function selAns(btn) {
+  const sid = btn.dataset.slot;
+  const ans = btn.dataset.ans;
+  respAnswers[sid] = ans;
+  document.querySelectorAll(`[data-slot="${sid}"]`).forEach(b => {
+    b.className = 'ans-btn';
+    if(b.dataset.ans === ans)
+      b.classList.add(ans==='ok'?'a-ok':ans==='maybe'?'a-mb':'a-ng');
+  });
+}
+
+async function saveResponse() {
+  const name = document.getElementById('iRespName').value.trim();
+  if(!name) { alert('お名前を入力してください'); return; }
+  localStorage.setItem('schedRespName', name);
+
+  const existing = schedResp.find(r=>r.memberName===name);
+  const comment = document.getElementById('iRespComment').value.trim();
+  const data = {
+    scheduleId: curSchedId,
+    memberName: name,
+    answers: respAnswers,
+    comment: comment || '',
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  closeModal('mSchedResponse');
+  if(existing) {
+    await db.collection('scheduleResponses').doc(existing.id).set(data);
+  } else {
+    await db.collection('scheduleResponses').add(data);
+  }
+}
+
+// ---- Create Schedule ----
+function openCreateSched() {
+  editSlots = [];
+  document.getElementById('iSchedTitle').value = '';
+  document.getElementById('iSchedDesc').value = '';
+  renderSlotRows();
+  document.getElementById('mCreateSched').classList.add('show');
+  setTimeout(() => document.getElementById('iSchedTitle').focus(), 120);
+}
+
+function renderSlotRows() {
+  const el = document.getElementById('slotRows');
+  if(editSlots.length === 0) {
+    el.innerHTML = '<div style="color:var(--sub);font-size:.82rem;padding:4px 0">候補日を追加してください</div>';
+    return;
+  }
+  el.innerHTML = editSlots.map((sl, i) =>
+    `<div class="slot-row">
+      <input class="finput" type="date" value="${sl.date}"
+        oninput="editSlots[${i}].date=this.value" style="flex:1.4;">
+      <input class="finput" type="text" value="${esc(sl.timeLabel)}"
+        oninput="editSlots[${i}].timeLabel=this.value"
+        placeholder="20:00〜" style="flex:1;">
+      <button type="button" class="btn btn-d btn-sm" style="padding:8px 10px" onclick="removeSlot(${i})">✕</button>
+    </div>`
+  ).join('');
+}
+
+function addSlot() {
+  editSlots.push({
+    id: 'sl' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    date: '', timeLabel: ''
+  });
+  renderSlotRows();
+}
+
+function removeSlot(i) {
+  editSlots.splice(i, 1);
+  renderSlotRows();
+}
+
+async function saveSched() {
+  const title = document.getElementById('iSchedTitle').value.trim();
+  if(!title) { alert('タイトルを入力してください'); return; }
+  if(editSlots.length === 0) { alert('候補日を1件以上追加してください'); return; }
+
+  const slots = editSlots.map(sl => ({
+    ...sl,
+    dateLabel: sl.date ? formatDateLabel(sl.date) : '（日付未設定）'
+  }));
+
+  closeModal('mCreateSched');
+  await db.collection('schedules').add({
+    title,
+    description: document.getElementById('iSchedDesc').value.trim(),
+    slots,
+    status: 'open',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+async function deleteSched() {
+  const s = schedules.find(s=>s.id===curSchedId);
+  if(!confirm(`「${s?.title||'この日程調整'}」を削除しますか？\n回答データも削除されます。`)) return;
+  closeModal('mSchedDetail');
+  const batch = db.batch();
+  schedResp.forEach(r => batch.delete(db.collection('scheduleResponses').doc(r.id)));
+  await batch.commit();
+  await db.collection('schedules').doc(curSchedId).delete();
+}
+
+// ==================== SCRIPTS (脚本マスタ) ====================
+let scripts      = [];
+let unsubScripts = null;
+let editScriptId = null;
+let editDirNames = [];
+let editActNames = [];
+
+function subscribeScripts() {
+  if(unsubScripts) unsubScripts();
+  unsubScripts = db.collection('scripts').orderBy('createdAt').onSnapshot(snap => {
+    scripts = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderScriptSettings();
+  }, ()=>{ renderScriptSettings(); });
+}
+
+function renderScriptSettings() {
+  const el = document.getElementById('scriptListEl');
+  if(!el) return;
+  const admin = canAdmin();
+  if(scripts.length === 0) {
+    el.innerHTML = `<div style="color:var(--sub);font-size:.88rem;padding:6px 0">脚本がありません</div>`
+      + (admin ? `<button class="btn btn-s btn-blk" onclick="openScriptEdit()">＋ 脚本を追加</button>` : '');
+    return;
+  }
+  el.innerHTML = scripts.map(s => `
+    <div class="sitem">
+      <div class="sitem-info">
+        <div class="sitem-name">${esc(s.name)}</div>
+        <div class="sitem-sub">🎬 ${(s.dirNames||[]).join('・')||'—'}</div>
+        <div class="sitem-sub">🎭 ${(s.actNames||[]).join('・')||'—'}</div>
+      </div>
+      <div class="sitem-acts">
+        ${admin ? `<button class="btn btn-s btn-sm" onclick="openScriptEdit('${s.id}')">編集</button>` : ''}
+      </div>
+    </div>`).join('')
+    + (admin ? `<button class="btn btn-s btn-blk" onclick="openScriptEdit()">＋ 脚本を追加</button>` : '');
+}
+
+function openScriptEdit(id) {
+  editScriptId = id || null;
+  const s = id ? scripts.find(sc=>sc.id===id) : null;
+  editDirNames = s ? [...(s.directorNames||[])] : [];
+  editActNames = s ? [...(s.actorNames||[])]    : [];
+  document.getElementById('mScriptTitle').textContent = id ? '脚本を編集' : '脚本を追加';
+  document.getElementById('iScriptName').value = s?.name || '';
+  document.getElementById('mScriptDelRow').style.display = id ? 'block' : 'none';
+  renderScriptChips();
+  document.getElementById('mScriptEdit').classList.add('show');
+  setTimeout(()=>document.getElementById('iScriptName').focus(), 120);
+}
+
+function renderScriptChips() {
+  renderChipGroup('scriptDirChips', editDirNames, 'toggleDir');
+  renderChipGroup('scriptActChips', editActNames, 'toggleAct');
+}
+
+function renderChipGroup(elId, selected, fn) {
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(members.length === 0) {
+    el.innerHTML = '<div style="font-size:.82rem;color:var(--sub)">先にメンバーを登録してください</div>';
+    return;
+  }
+  el.innerHTML = members.map(m => {
+    const sel = selected.includes(m.name);
+    return `<button type="button" onclick="${fn}('${esc(m.name)}')"
+      style="padding:5px 14px;border-radius:20px;border:1.5px solid;font-size:.84rem;font-weight:600;cursor:pointer;
+      background:${sel?'var(--primary)':'#fff'};color:${sel?'#fff':'var(--sub)'};
+      border-color:${sel?'var(--primary)':'var(--border)'}">${esc(m.name)}</button>`;
+  }).join('');
+}
+
+function toggleDir(name) {
+  const i = editDirNames.indexOf(name);
+  i >= 0 ? editDirNames.splice(i,1) : editDirNames.push(name);
+  renderScriptChips();
+}
+function toggleAct(name) {
+  const i = editActNames.indexOf(name);
+  i >= 0 ? editActNames.splice(i,1) : editActNames.push(name);
+  renderScriptChips();
+}
+
+async function saveScript() {
+  const name = document.getElementById('iScriptName').value.trim();
+  if(!name) { alert('脚本名を入力してください'); return; }
+  const data = { name, directorNames: editDirNames, actorNames: editActNames };
+  closeModal('mScriptEdit');
+  if(editScriptId) {
+    await db.collection('scripts').doc(editScriptId).update(data);
+  } else {
+    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('scripts').add(data);
+  }
+}
+
+async function deleteScript() {
+  const s = scripts.find(sc=>sc.id===editScriptId);
+  if(!confirm(`「${s?.name||'この脚本'}」を削除しますか？`)) return;
+  closeModal('mScriptEdit');
+  await db.collection('scripts').doc(editScriptId).delete();
+}
+
+// ==================== REHEARSAL PLANNING ====================
+let rpFilter = 'all';       // 'all' | scriptId
+let rehearsals = [];
+let unsubRehearsal       = null;
+let unsubDetailRehearsal = null;
+
+// ---- decided dates badge in schedule detail ----
+function subscribeDetailRehearsals(schedId) {
+  if(unsubDetailRehearsal) { unsubDetailRehearsal(); unsubDetailRehearsal = null; }
+  unsubDetailRehearsal = db.collection('rehearsals')
+    .where('scheduleId','==',schedId)
+    .onSnapshot(snap => {
+      renderDecidedInDetail(snap.docs.map(d=>({id:d.id,...d.data()})));
+    }, ()=>{});
+}
+
+function renderDecidedInDetail(decided) {
+  const el = document.getElementById('schedDecided');
+  if(!decided || decided.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div style="font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:5px">✅ 決定済み稽古日</div>`
+    + decided.map(r =>
+        `<div class="decided-chip">
+          <span class="decided-chip-label">${esc(r.slotLabel)}</span>
+          <span class="decided-chip-team">${esc(r.scriptName||r.teamName||'')}</span>
+        </div>`
+      ).join('');
+}
+
+// ---- planning modal ----
+function openRehearsalPlanFor(id, e) {
+  if(e) e.stopPropagation();
+  curSchedId = id;
+  openRehearsalPlan();
+}
+
+function openRehearsalPlan() {
+  const s = schedules.find(s=>s.id===curSchedId);
+  if(!s) return;
+  document.getElementById('rpTitle').textContent = s.title;
+  rpFilter = 'all';
+  renderRpTabs();
+  document.getElementById('rpRankedList').innerHTML = '';
+  document.getElementById('rpDecidedSection').innerHTML = '';
+  // 回答データをまだ購読していない場合は購読開始
+  if(schedResp.length === 0 || schedResp[0]?.scheduleId !== curSchedId) {
+    subscribeSchedResponses(curSchedId);
+  }
+  subscribeRehearsals(curSchedId);
+  document.getElementById('mRehearsalPlan').classList.add('show');
+}
+
+function renderRpTabs() {
+  document.getElementById('rpTeamTabs').innerHTML =
+    `<button class="scope-btn act" onclick="setRpFilter('all',this)">全体</button>`
+    + scripts.map(sc =>
+        `<button class="scope-btn" onclick="setRpFilter('${sc.id}',this)">📜 ${esc(sc.name)}</button>`
+      ).join('');
+}
+
+function subscribeRehearsals(schedId) {
+  if(unsubRehearsal) { unsubRehearsal(); unsubRehearsal = null; }
+  unsubRehearsal = db.collection('rehearsals')
+    .where('scheduleId','==',schedId)
+    .onSnapshot(snap => {
+      rehearsals = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderRpRanked();
+      renderRpDecided();
+    }, ()=>{ renderRpRanked(); });
+}
+
+function setRpFilter(filter, btn) {
+  rpFilter = filter;
+  document.querySelectorAll('#rpTeamTabs .scope-btn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  renderRpRanked();
+}
+
+function renderRpRanked() {
+  const s = schedules.find(s=>s.id===curSchedId);
+  if(!s) return;
+  const el = document.getElementById('rpRankedList');
+  const slots = s.slots || [];
+
+  const scriptObj = scripts.find(sc=>sc.id===rpFilter) || null;
+  const dirNames  = scriptObj ? (scriptObj.dirNames||[]) : [];
+  const actNames  = scriptObj ? (scriptObj.actNames||[]) : [];
+  const required  = scriptObj ? [...dirNames, ...actNames]    : null;
+
+  const scored = slots.map(sl => {
+    const ans = {};
+    schedResp.forEach(r => {
+      const a = (r.answers||{})[sl.id];
+      if(a==='ok'||a==='maybe') ans[r.memberName] = a;
+    });
+    if(required) {
+      const okNames = required.filter(n=>ans[n]==='ok');
+      const mbNames = required.filter(n=>ans[n]==='maybe');
+      const allOk   = required.length > 0 && required.every(n=>ans[n]==='ok');
+      const allOkMb = required.length > 0 && required.every(n=>ans[n]==='ok'||ans[n]==='maybe');
+      return { sl, ans, okNames, mbNames, allOk, allOkMb };
+    } else {
+      const okNames = schedResp.filter(r=>(r.answers||{})[sl.id]==='ok').map(r=>r.memberName);
+      const mbNames = schedResp.filter(r=>(r.answers||{})[sl.id]==='maybe').map(r=>r.memberName);
+      return { sl, ans, okNames, mbNames, allOk:false, allOkMb:false };
+    }
+  });
+
+  scored.sort((a,b) => {
+    if(required) {
+      if(a.allOk  !== b.allOk)  return a.allOk  ? -1 : 1;
+      if(a.allOkMb !== b.allOkMb) return a.allOkMb ? -1 : 1;
+    }
+    return b.okNames.length - a.okNames.length || b.mbNames.length - a.mbNames.length;
+  });
+
+  const top   = scored.slice(0, 20);
+  const denom = required ? required.length : Math.max(schedResp.length, 1);
+
+  if(top.length === 0 || schedResp.length === 0) {
+    el.innerHTML = '<div style="color:var(--sub);text-align:center;padding:20px">回答データがありません</div>';
+    return;
+  }
+
+  const chip = (name, type) => {
+    const style = type==='ok'  ? 'background:var(--maeure-l);color:var(--maeure)'
+                : type==='maybe' ? 'background:#fff8e1;color:#f57c00'
+                :                  'background:#f5f5f5;color:#bdbdbd';
+    const suf = type==='ok' ? '' : type==='maybe' ? '△' : '×';
+    return `<span style="${style};padding:1px 7px;border-radius:10px;font-size:.72rem;font-weight:700;white-space:nowrap">${esc(name)}${suf}</span>`;
+  };
+
+  el.innerHTML = top.map((item, rank) => {
+    const { sl, ans, okNames, mbNames, allOk, allOkMb } = item;
+    const okN = okNames.length, mbN = mbNames.length;
+    const isDecided = rehearsals.some(r =>
+      r.slotId === sl.id && (r.scriptId||'all') === rpFilter
+    );
+
+    const badge = allOk  ? `<div style="font-size:.72rem;font-weight:700;color:var(--maeure);background:#e8f5e9;padding:2px 8px;border-radius:8px;margin-top:3px">🎉 全員参加可</div>`
+                : allOkMb ? `<div style="font-size:.72rem;color:#f57c00;background:#fff8e1;padding:2px 8px;border-radius:8px;margin-top:3px">△込みで全員可</div>`
+                : '';
+
+    let namesHtml = '';
+    if(scriptObj) {
+      const dRow = dirNames.map(n=>chip(n,ans[n]||'ng')).join('');
+      const aRow = actNames.map(n=>chip(n,ans[n]||'ng')).join('');
+      namesHtml = `<div class="rp-names" style="margin-top:4px">
+        ${dirNames.length?`<span style="font-size:.7rem;margin-right:2px">🎬</span>${dRow}`:''}
+        ${actNames.length?`<span style="font-size:.7rem;margin:0 2px 0 5px">🎭</span>${aRow}`:''}
+      </div>`;
+    } else {
+      namesHtml = `<div class="rp-names">
+        ${okNames.map(n=>chip(n,'ok')).join('')}
+        ${mbNames.map(n=>chip(n,'maybe')).join('')}
+        ${okN===0&&mbN===0?`<span style="font-size:.72rem;color:#bdbdbd">全員×</span>`:''}
+      </div>`;
+    }
+
+    return `<div class="rp-row" style="${allOk?'background:#f1f8e9;border-radius:8px;padding:9px 6px;margin:0 -6px;border-bottom:none':''}">
+      <div class="rp-rank">${rank+1}</div>
+      <div class="rp-info">
+        <div class="rp-label">${esc(sl.dateLabel)} <span class="rp-time">${esc(sl.timeLabel||'')}</span></div>
+        ${badge}${namesHtml}
+      </div>
+      <div class="rp-score">
+        <div class="rp-ok-n">○${okN}<span class="rp-ok-sub">/${denom}</span></div>
+        ${mbN?`<div class="rp-mb-n">△${mbN}</div>`:''}
+      </div>
+      ${isDecided
+        ? `<div class="rp-decided-badge">✅ 決定</div>`
+        : canAdmin() ? `<button class="rp-decide-btn" onclick="decideRehearsal('${sl.id}','${esc(sl.dateLabel)} ${esc(sl.timeLabel||'')}')">決定</button>` : ''
+      }
+    </div>`;
+  }).join('');
+}
+
+function renderRpDecided() {
+  const el = document.getElementById('rpDecidedSection');
+  if(rehearsals.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div style="font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:6px">✅ 決定済み稽古日</div>`
+    + rehearsals.map(r =>
+        `<div class="decided-chip" style="margin-bottom:6px">
+          <span class="decided-chip-label">${esc(r.slotLabel)}</span>
+          <span class="decided-chip-team">${esc(r.scriptName||r.teamName||'')}</span>
+          ${canAdmin() ? `<button onclick="cancelRehearsal('${r.id}')"
+            style="background:none;border:none;color:#bdbdbd;font-size:1.1rem;padding:2px 4px;line-height:1">✕</button>` : ''}
+        </div>`
+      ).join('')
+    + `<div style="border-top:1px solid var(--border);margin:10px 0 6px"></div>`;
+}
+
+async function decideRehearsal(slotId, slotLabel) {
+  const label      = slotLabel.trim();
+  const scriptObj  = scripts.find(sc=>sc.id===rpFilter);
+  const scriptName = scriptObj ? scriptObj.name : '全体';
+  if(!confirm(`「${label}」を${scriptName}の稽古日に決定しますか？`)) return;
+  await db.collection('rehearsals').add({
+    scheduleId: curSchedId,
+    slotId,
+    slotLabel: label,
+    scriptId:   rpFilter === 'all' ? null : rpFilter,
+    scriptName,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+async function cancelRehearsal(id) {
+  if(!confirm('この稽古日の決定を取り消しますか？')) return;
+  await db.collection('rehearsals').doc(id).delete();
+}
+
+// ==================== CALENDAR ====================
+let allRehearsals    = [];
+let unsubAllReh      = null;
+let allSchedResponses = [];
+let unsubAllSchedResp = null;
+let calYear          = new Date().getFullYear();
+let calMonth         = new Date().getMonth() + 1;
+let selectedCalDate  = null; // "YYYY-MM-DD"
+
+function subscribeAllRehearsals() {
+  if(unsubAllReh) unsubAllReh();
+  unsubAllReh = db.collection('rehearsals').onSnapshot(snap => {
+    allRehearsals = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(document.getElementById('calView').style.display !== 'none') renderCalendar();
+    if(document.getElementById('attView').style.display  !== 'none') renderAttView();
+  }, ()=>{});
+}
+
+function subscribeAllSchedResponses() {
+  if(unsubAllSchedResp) unsubAllSchedResp();
+  unsubAllSchedResp = db.collection('scheduleResponses').onSnapshot(snap => {
+    allSchedResponses = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(document.getElementById('calView').style.display !== 'none') renderCalendar();
+    if(document.getElementById('attView').style.display  !== 'none') renderAttView();
+  }, ()=>{});
+}
+
+// スロットに参加できるメンバー名を返す {ok:[], maybe:[]}
+function getSlotAttendees(rehearsal) {
+  const responses = allSchedResponses.filter(r => r.scheduleId === rehearsal.scheduleId);
+  const ok = [], maybe = [];
+  // スクリプトがある場合は該当メンバーのみ
+  let filterNames = null;
+  if(rehearsal.scriptId && rehearsal.scriptId !== 'all') {
+    const sc = scripts.find(s => s.id === rehearsal.scriptId);
+    if(sc) {
+      const names = [...(sc.dirNames||[]), ...(sc.actNames||[])];
+      if(names.length > 0) filterNames = new Set(names);
+    }
+  }
+  responses.forEach(resp => {
+    const name = resp.memberName;
+    if(filterNames && !filterNames.has(name)) return;
+    const ans = (resp.answers || {})[rehearsal.slotId];
+    if(ans === 'ok') ok.push(name);
+    else if(ans === 'maybe') maybe.push(name);
+  });
+  return { ok, maybe };
+}
+
+function switchSchedSubTab(tab, btn) {
+  document.querySelectorAll('[id^="stab-"]').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  document.getElementById('schedListContent').style.display = tab==='list' ? '' : 'none';
+  document.getElementById('attView').style.display          = tab==='att'  ? '' : 'none';
+  document.getElementById('calView').style.display          = tab==='cal'  ? '' : 'none';
+  if(tab==='cal') { selectedCalDate = null; renderCalendar(); }
+  if(tab==='att') { attSchedId = schedules[0]?.id || null; renderAttView(); }
+}
+
+function getRehearsalDateStr(r) {
+  if(r.date) return r.date;
+  const m = (r.slotLabel||'').match(/^(\d+)\/(\d+)/);
+  if(!m) return null;
+  const yr = new Date().getFullYear();
+  return `${yr}-${String(+m[1]).padStart(2,'0')}-${String(+m[2]).padStart(2,'0')}`;
+}
+
+function changeCalMonth(dir) {
+  calMonth += dir;
+  if(calMonth > 12) { calMonth = 1; calYear++; }
+  if(calMonth <  1) { calMonth = 12; calYear--; }
+  selectedCalDate = null;
+  renderCalendar();
+}
+
+function selectCalDay(ymd) {
+  selectedCalDate = selectedCalDate === ymd ? null : ymd;
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const el = document.getElementById('calView');
+  if(!el || el.style.display === 'none') return;
+
+  const today   = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  // Group rehearsals by date for this month
+  const byDate = {};
+  allRehearsals.forEach(r => {
+    const d = getRehearsalDateStr(r);
+    if(!d) return;
+    const [y,m] = d.split('-').map(Number);
+    if(y !== calYear || m !== calMonth) return;
+    if(!byDate[d]) byDate[d] = [];
+    byDate[d].push(r);
+  });
+
+  const firstDow  = new Date(calYear, calMonth-1, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth, 0).getDate();
+  const dows = ['日','月','火','水','木','金','土'];
+
+  // Header row
+  let cells = dows.map((d,i)=>
+    `<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`
+  ).join('');
+
+  // Leading blanks
+  for(let i=0; i<firstDow; i++) cells += '<div class="cal-cell other-month"></div>';
+
+  // Day cells
+  for(let d=1; d<=daysInMonth; d++) {
+    const ymd  = `${calYear}-${String(calMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const events = byDate[ymd] || [];
+    const isToday    = ymd === todayStr;
+    const hasEvent   = events.length > 0;
+    const isSelected = ymd === selectedCalDate;
+    const cls = ['cal-cell','cur-month',
+      isToday    ? 'today'    : '',
+      hasEvent   ? 'has-event': '',
+      isSelected ? 'selected' : ''
+    ].filter(Boolean).join(' ');
+
+    // Dots: up to 3, colored by script (cycle palette)
+    const palette = ['var(--primary)','var(--oki)','var(--maeure)','var(--gold)'];
+    const dots = events.slice(0,3).map((_,i)=>
+      `<div class="cal-dot" style="background:${palette[i%palette.length]}"></div>`
+    ).join('');
+
+    cells += `<div class="${cls}" ${hasEvent?`onclick="selectCalDay('${ymd}')"`:''}>
+      <div class="cal-dn">${d}</div>
+      ${hasEvent ? `<div class="cal-dots">${dots}</div>` : ''}
+    </div>`;
+  }
+
+  // Event panel (shown when a date is selected)
+  let eventPanel = '';
+  if(selectedCalDate && byDate[selectedCalDate]) {
+    const [,sm,sd] = selectedCalDate.split('-').map(Number);
+    const dayEvents = byDate[selectedCalDate];
+    eventPanel = `<div class="cal-event-panel">
+      <div class="cal-event-hdr">${sm}月${sd}日 の稽古（${dayEvents.length}件）</div>
+      ${dayEvents.map(r => {
+        const timeLabel = (r.slotLabel||'').replace(/^\d+\/\d+\([^)]+\)\s*/,'') || '';
+        const att = getSlotAttendees(r);
+        const okChips  = att.ok.map(n=>`<span class="cal-att-chip ok">${esc(n)}</span>`).join('');
+        const mbChips  = att.maybe.map(n=>`<span class="cal-att-chip mb">${esc(n)}</span>`).join('');
+        const attHtml  = (att.ok.length + att.maybe.length) > 0
+          ? `<div class="cal-att-row">${okChips}${mbChips}</div>` : '';
+        return `<div class="cal-event-item">
+          <div class="cal-event-time">${esc(timeLabel)||'—'}</div>
+          <div style="flex:1;min-width:0">
+            <div class="cal-event-name">${esc(r.slotLabel||'')}</div>
+            ${r.scriptName?`<div class="cal-event-script">📜 ${esc(r.scriptName)}</div>`:''}
+            ${attHtml}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="changeCalMonth(-1)">‹</button>
+      <div class="cal-month-lbl">${calYear}年${calMonth}月</div>
+      <button class="cal-nav-btn" onclick="changeCalMonth(1)">›</button>
+    </div>
+    <div class="cal-grid">${cells}</div>
+    ${eventPanel}
+  `;
+}
+
+function formatDateLabel(dateStr) {
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const days = ['日','月','火','水','木','金','土'];
+  return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`;
+}
+
+// ==================== 出欠表 ====================
+let attSchedId = null;
+
+function renderAttView() {
+  const el = document.getElementById('attView');
+  if(!el) return;
+
+  // スケジュール選択ボタン
+  const schedSel = schedules.length > 1
+    ? `<div class="att-sched-sel">${schedules.map(s =>
+        `<button class="att-sched-btn${attSchedId===s.id?' act':''}"
+          onclick="attSchedId='${s.id}';renderAttView()">${esc(s.title)}</button>`
+      ).join('')}</div>`
+    : '';
+
+  const sched = schedules.find(s => s.id === attSchedId);
+  if(!sched) {
+    el.innerHTML = schedSel + '<div class="empty"><div class="empty-ic">📊</div><div>日程調整を選んでください</div></div>';
+    return;
+  }
+
+  const slots  = sched.slots || [];
+  const mems   = [...members]; // order済み
+  // このスケジュールの回答
+  const resps  = allSchedResponses.filter(r => r.scheduleId === attSchedId);
+  // 決定済みスロットID
+  const decidedSlotIds = new Set(allRehearsals.filter(r => r.scheduleId === attSchedId).map(r => r.slotId));
+
+  // ansMap: memberName → { slotId → 'ok'|'maybe'|'ng' }
+  const ansMap = {};
+  resps.forEach(r => { ansMap[r.memberName] = r.answers || {}; });
+
+  const symOf = v => v==='ok' ? '<span class="att-ok">◯</span>'
+                   : v==='maybe' ? '<span class="att-mb">△</span>'
+                   : '<span class="att-ng">×</span>';
+
+  const thead = `<tr>
+    <th class="att-th-slot">日程</th>
+    ${mems.map(m=>`<th class="att-th-mem">${esc(m.name)}</th>`).join('')}
+  </tr>`;
+
+  const tbody = slots.map(sl => {
+    const isDecided = decidedSlotIds.has(sl.id);
+    const label = `${sl.dateLabel}${sl.timeLabel ? ' '+sl.timeLabel : ''}`;
+    const badge = isDecided ? '<span class="att-decided-badge">稽古日</span>' : '';
+    return `<tr class="${isDecided?'att-decided':''}">
+      <td class="att-td-slot">${esc(label)}${badge}</td>
+      ${mems.map(m => `<td>${symOf((ansMap[m.name]||{})[sl.id])}</td>`).join('')}
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = schedSel + `
+    <div class="att-wrap">
+      <table class="att-table">
+        <thead>${thead}</thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>`;
+}
+</script>
+</body>
+</html>
