@@ -109,21 +109,25 @@ async function main() {
   const weekday    = WEEKDAYS[dateObj.getUTCDay()];
   const dateLabel  = `${month}月${day}日（${weekday}）`;
 
-  // メッセージ本文を構築（稽古ごとに1ブロック）
-  const blocks = targets.map(r => {
+  // Embedフィールドを構築（稽古ごとに1セット）
+  const fields = targets.flatMap(r => {
     const timeLabel = (r.slotLabel || '').replace(/^\d+\/\d+\([^)]+\)\s*/, '').trim() || '—';
     return [
-      `本日の稽古は${timeLabel}からです！よろしくおねがいします。`,
-      ``,
-      `チーム：『${r.scriptName || '全体稽古'}』`,
-      r.venue ? `場所：${r.venue}` : null,
-      `――――――――――`
-    ].filter(v => v !== null).join('\n');
-  }).join('\n\n');
+      { name: '🎭 チーム',  value: `**${r.scriptName || '全体稽古'}**`, inline: false },
+      { name: '🕐 時間',   value: timeLabel,       inline: true },
+      { name: '📍 場所',   value: r.venue || '未定', inline: true },
+    ];
+  });
 
-  const content = `@everyone\n📅 稽古のお知らせ　${dateLabel}\n\n${blocks}`;
+  const embed = {
+    title: `📅 稽古のお知らせ　${dateLabel}`,
+    color: COLOR_TODAY,
+    fields,
+    footer: { text: 'メゾン・ドゥ・ココル 稽古管理システム' },
+    timestamp: new Date().toISOString()
+  };
 
-  await sendToDiscord({ content });
+  await sendToDiscord({ content: '@everyone', embeds: [embed] });
   console.log(`✅ ${targets.length}件の稽古リマインドを送信しました`);
 }
 
