@@ -1,0 +1,9 @@
+{
+  "name": "discord-reminder",
+  "version": "1.0.0",
+  "description": "稽古リマインダー for Discord",
+  "main": "remind.js",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
