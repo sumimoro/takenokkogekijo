@@ -12,6 +12,19 @@ const db = admin.firestore();
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
+// "5/11(月)" → "2026-05-11" に変換
+function parseDateLabel(dateLabel) {
+  const match = (dateLabel || '').match(/^(\d+)\/(\d+)/);
+  if (!match) return null;
+  const month = parseInt(match[1]);
+  const day   = parseInt(match[2]);
+  const now   = getJSTNow();
+  let year    = now.getUTCFullYear();
+  // 月が現在より小さければ来年と判定
+  if (month < now.getUTCMonth() + 1) year++;
+  return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+
 // JSTの現在時刻を取得
 function getJSTNow() {
   return new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -77,7 +90,10 @@ async function main() {
   schedSnap.forEach(doc => {
     const s = doc.data();
     (s.slots || []).forEach(slot => {
-      if (slot.id && slot.date) slotDateMap[slot.id] = slot.date;
+      if (slot.id && slot.dateLabel) {
+        const parsed = parseDateLabel(slot.dateLabel);
+        if (parsed) slotDateMap[slot.id] = parsed;
+      }
     });
   });
 
