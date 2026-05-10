@@ -30,26 +30,15 @@ function getJSTNow() {
   return new Date(Date.now() + 9 * 60 * 60 * 1000);
 }
 
-// 対象日（YYYY-MM-DD）と通知モードを決定
-// 20:00 JST → 翌日の稽古を「明日のお知らせ」として通知
-//  7:00 JST → 当日の稽古を「本日のお知らせ」として通知
+// 対象日（YYYY-MM-DD）を返す（当日 12:00 JST に送信）
 function getTargetInfo() {
   const now = getJSTNow();
-  const hour = now.getUTCHours();
-  const isMorning = hour < 15; // 15時未満 = 朝リマインド（当日）
-
-  const target = new Date(now);
-  if (!isMorning) {
-    target.setUTCDate(target.getUTCDate() + 1); // 翌日
-  }
-
-  const dateStr = target.toISOString().split('T')[0]; // YYYY-MM-DD
-  return { dateStr, isMorning };
+  const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD（JST基準）
+  return { dateStr };
 }
 
 // Discord Embedカラー
-const COLOR_MORNING  = 0x2f9e44; // 緑（当日）
-const COLOR_EVENING  = 0x3b5bdb; // 青（前日）
+const COLOR_TODAY = 0x2f9e44; // 緑
 
 // Discord Webhookに送信
 async function sendToDiscord(payload) {
@@ -81,8 +70,8 @@ async function sendToDiscord(payload) {
 }
 
 async function main() {
-  const { dateStr, isMorning } = getTargetInfo();
-  console.log(`対象日: ${dateStr} / モード: ${isMorning ? '当日(朝)' : '前日(夜)'}`);
+  const { dateStr } = getTargetInfo();
+  console.log(`対象日: ${dateStr}`);
 
   // schedules から slotId → date のマップを作成
   const schedSnap = await db.collection('schedules').get();
@@ -120,36 +109,21 @@ async function main() {
   const weekday    = WEEKDAYS[dateObj.getUTCDay()];
   const dateLabel  = `${month}月${day}日（${weekday}）`;
 
-  const title = isMorning
-    ? `🎭 本日の稽古のお知らせ　${dateLabel}`
-    : `📅 明日の稽古のお知らせ　${dateLabel}`;
-  const color = isMorning ? COLOR_MORNING : COLOR_EVENING;
-
-  // Embedフィールドを構築（稽古ごとに1フィールド）
-  const fields = targets.map(r => {
-    // slotLabel から時間帯部分だけ取り出す（例："5/15(金) 午前" → "午前"）
+  // メッセージ本文を構築（稽古ごとに1ブロック）
+  const blocks = targets.map(r => {
     const timeLabel = (r.slotLabel || '').replace(/^\d+\/\d+\([^)]+\)\s*/, '').trim() || '—';
-    const lines = [
-      `🕐 ${timeLabel}`,
-      r.venue ? `📍 ${r.venue}` : null
-    ].filter(Boolean).join('\n');
+    return [
+      `本日の稽古は${timeLabel}からです！よろしくおねがいします。`,
+      ``,
+      `チーム：『${r.scriptName || '全体稽古'}』`,
+      r.venue ? `場所：${r.venue}` : null,
+      `――――――――――`
+    ].filter(v => v !== null).join('\n');
+  }).join('\n\n');
 
-    return {
-      name: r.scriptName || '全体稽古',
-      value: lines,
-      inline: false
-    };
-  });
+  const content = `@everyone\n📅 稽古のお知らせ　${dateLabel}\n\n${blocks}`;
 
-  const embed = {
-    title,
-    color,
-    fields,
-    footer: { text: 'メゾン・ドゥ・ココル 稽古管理システム' },
-    timestamp: new Date().toISOString()
-  };
-
-  await sendToDiscord({ embeds: [embed] });
+  await sendToDiscord({ content });
   console.log(`✅ ${targets.length}件の稽古リマインドを送信しました`);
 }
 

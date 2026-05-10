@@ -2,8 +2,7 @@ name: Discord稽古リマインダー
 
 on:
   schedule:
-    - cron: '0 11 * * *'   # 毎日 20:00 JST（前日リマインド）
-    - cron: '0 22 * * *'   # 毎日 07:00 JST（当日リマインド）
+    - cron: '0 3 * * *'    # 毎日 12:00 JST（当日リマインド）
   workflow_dispatch:         # 手動実行も可能
 
 jobs:
