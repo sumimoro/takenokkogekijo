@@ -1,12 +1,10 @@
 const admin = require('firebase-admin');
 const https = require('https');
 
-// Firebase初期化
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-// GitHub Secretsで改行文字が壊れる場合の修正
-if (serviceAccount.private_key) {
-  serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-}
+// Firebase初期化（base64デコード）
+const serviceAccount = JSON.parse(
+  Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('utf8')
+);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
