@@ -346,9 +346,22 @@ input,select{font-family:inherit;font-size:inherit;}
   border-radius:8px;padding:6px 10px;font-size:.8rem;font-weight:700;
   flex-shrink:0;white-space:nowrap;}
 .decided-chip{background:#e8f5e9;border-radius:8px;padding:7px 10px;
-  margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-.decided-chip-label{font-weight:700;color:var(--maeure);flex:1;font-size:.9rem;}
+  margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.decided-chip-label{font-weight:700;color:var(--maeure);flex:1;font-size:.9rem;min-width:0;}
 .decided-chip-team{font-size:.72rem;color:var(--sub);}
+.decided-chip-venue{font-size:.75rem;color:#1565c0;background:#e3f2fd;
+  padding:1px 7px;border-radius:8px;font-weight:600;white-space:nowrap;}
+.edit-venue-btn{background:none;border:none;color:#bdbdbd;font-size:.8rem;
+  padding:2px 4px;line-height:1;flex-shrink:0;}
+/* ===== VENUE CHIPS ===== */
+.venue-chip-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.venue-chip{padding:11px 18px;border-radius:20px;border:1.5px solid var(--oki);
+  background:var(--oki-l);color:var(--oki);font-size:.95rem;font-weight:600;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:.1s;}
+.venue-chip:active{opacity:.65;}
+.venue-chip.none{border-color:var(--border);background:#f5f5f5;color:var(--sub);}
+/* 場所マスタ追加行 */
+.venue-add-row{display:flex;gap:8px;margin-top:8px;}
 
 /* ===== CALENDAR ===== */
 .cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
@@ -382,6 +395,7 @@ input,select{font-family:inherit;font-size:inherit;}
   flex-shrink:0;min-width:56px;}
 .cal-event-name{font-size:.85rem;font-weight:600;line-height:1.4;}
 .cal-event-script{font-size:.75rem;color:var(--sub);margin-top:1px;}
+.cal-event-venue{font-size:.75rem;color:#1565c0;font-weight:600;margin-top:1px;}
 .cal-att-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
 .cal-att-chip{font-size:.7rem;padding:2px 7px;border-radius:10px;font-weight:600;}
 .cal-att-chip.ok{background:var(--primary-light,#ffe8e8);color:var(--primary);}
@@ -527,6 +541,9 @@ input,select{font-family:inherit;font-size:inherit;}
 
       <div class="sec-lbl">メンバー</div>
       <div class="card" id="memberListEl"></div>
+
+      <div class="sec-lbl">稽古場所マスタ</div>
+      <div class="card" id="venueListEl"></div>
     </div>
 
   </div>
@@ -789,6 +806,16 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
+<!-- 稽古場所選択モーダル -->
+<div class="moverlay" id="mVenueInput" style="z-index:300">
+  <div class="modal">
+    <div class="modal-title">📍 稽古場所を選択</div>
+    <div id="mVenueLabel" style="text-align:center;font-size:.85rem;color:var(--sub);margin-bottom:14px;line-height:1.4"></div>
+    <div class="venue-chip-grid" id="venueChipList"></div>
+    <button class="btn btn-s btn-blk" onclick="cancelVenueDecide()">キャンセル</button>
+  </div>
+</div>
+
 <!-- Firebase & Logic -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -882,6 +909,7 @@ function updateAdminUI() {
   // ヘッダー：＋公演
   document.getElementById('btnAddPerf').style.display = admin ? '' : 'none';
   // 設定タブ再描画（管理者トグル含む）
+  renderVenueSettings();
   renderMemberSettings();
   renderPerfSettings();
   renderScriptSettings();
@@ -911,6 +939,7 @@ window.addEventListener('DOMContentLoaded', () => {
   subscribeAllTickets();
   subscribeSchedules();
   subscribeScripts();
+  subscribeVenues();
   subscribeAllRehearsals();
   subscribeAllSchedResponses();
   document.querySelectorAll('.moverlay').forEach(o => {
@@ -2031,6 +2060,66 @@ async function deleteSched() {
 }
 
 // ==================== SCRIPTS (脚本マスタ) ====================
+// ==================== VENUES ====================
+let venues      = [];
+let unsubVenues = null;
+
+function subscribeVenues() {
+  if(unsubVenues) unsubVenues();
+  unsubVenues = db.collection('venues').orderBy('order').onSnapshot(snap => {
+    venues = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderVenueSettings();
+  }, () => {
+    db.collection('venues').orderBy('createdAt').get().then(snap => {
+      venues = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderVenueSettings();
+    }).catch(()=>{});
+  });
+}
+
+function renderVenueSettings() {
+  const el = document.getElementById('venueListEl');
+  if(!el) return;
+  const admin = canAdmin();
+  let html = venues.map((v,i) => `
+    <div class="sitem">
+      <div class="sitem-info">
+        <div class="sitem-name">📍 ${esc(v.name)}</div>
+      </div>
+      <div class="sitem-acts">
+        ${admin ? `<button class="btn btn-d btn-sm" onclick="deleteVenue('${v.id}','${esc(v.name)}')">削除</button>` : ''}
+      </div>
+    </div>`).join('');
+  if(!venues.length) html = `<div style="color:var(--sub);font-size:.88rem;padding:6px 0">場所がありません</div>`;
+  if(admin) {
+    html += `<div class="venue-add-row">
+      <input class="finput" id="iNewVenue" type="text" placeholder="場所名を追加"
+        style="flex:1" onkeydown="if(event.keyCode===13)addVenue()">
+      <button class="btn btn-p" onclick="addVenue()">追加</button>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+async function addVenue() {
+  const el = document.getElementById('iNewVenue');
+  if(!el) return;
+  const name = el.value.trim();
+  if(!name) return;
+  el.value = '';
+  await db.collection('venues').add({
+    name,
+    order: venues.length,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+async function deleteVenue(id, name) {
+  if(!confirm(`「${name}」を削除しますか？`)) return;
+  await db.collection('venues').doc(id).delete();
+}
+
+// ==================== SCRIPTS ====================
 let scripts      = [];
 let unsubScripts = null;
 let editScriptId = null;
@@ -2157,6 +2246,7 @@ function renderDecidedInDetail(decided) {
         `<div class="decided-chip">
           <span class="decided-chip-label">${esc(r.slotLabel)}</span>
           <span class="decided-chip-team">${esc(r.scriptName||r.teamName||'')}</span>
+          ${r.venue ? `<span class="decided-chip-venue">📍 ${esc(r.venue)}</span>` : ''}
         </div>`
       ).join('');
 }
@@ -2317,6 +2407,8 @@ function renderRpDecided() {
         `<div class="decided-chip" style="margin-bottom:6px">
           <span class="decided-chip-label">${esc(r.slotLabel)}</span>
           <span class="decided-chip-team">${esc(r.scriptName||r.teamName||'')}</span>
+          ${r.venue ? `<span class="decided-chip-venue">📍 ${esc(r.venue)}</span>` : ''}
+          ${canAdmin() ? `<button class="edit-venue-btn" onclick="editRehearsalVenue('${r.id}')">✏️</button>` : ''}
           ${canAdmin() ? `<button onclick="cancelRehearsal('${r.id}')"
             style="background:none;border:none;color:#bdbdbd;font-size:1.1rem;padding:2px 4px;line-height:1">✕</button>` : ''}
         </div>`
@@ -2324,19 +2416,63 @@ function renderRpDecided() {
     + `<div style="border-top:1px solid var(--border);margin:10px 0 6px"></div>`;
 }
 
-async function decideRehearsal(slotId, slotLabel) {
-  const label      = slotLabel.trim();
+let _pendingSlotId      = null;
+let _pendingSlotLabel   = null;
+let _editingRehearsalId = null;
+
+function _openVenueModal(labelText) {
+  document.getElementById('mVenueLabel').textContent = labelText;
+  // チップを描画
+  const grid = document.getElementById('venueChipList');
+  const chips = venues.map(v =>
+    `<button class="venue-chip" onclick="selectVenue('${esc(v.name)}')">${esc(v.name)}</button>`
+  ).join('');
+  const noneChip = `<button class="venue-chip none" onclick="selectVenue('')">場所なし</button>`;
+  grid.innerHTML = chips + noneChip;
+  document.getElementById('mVenueInput').classList.add('show');
+}
+
+function decideRehearsal(slotId, slotLabel) {
+  _pendingSlotId      = slotId;
+  _pendingSlotLabel   = slotLabel.trim();
+  _editingRehearsalId = null;
   const scriptObj  = scripts.find(sc=>sc.id===rpFilter);
   const scriptName = scriptObj ? scriptObj.name : '全体';
-  if(!confirm(`「${label}」を${scriptName}の稽古日に決定しますか？`)) return;
-  await db.collection('rehearsals').add({
-    scheduleId: curSchedId,
-    slotId,
-    slotLabel: label,
-    scriptId:   rpFilter === 'all' ? null : rpFilter,
-    scriptName,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  _openVenueModal(`「${_pendingSlotLabel}」を ${scriptName} の稽古日に決定します`);
+}
+
+function editRehearsalVenue(id) {
+  _editingRehearsalId = id;
+  _pendingSlotId      = null;
+  _pendingSlotLabel   = null;
+  _openVenueModal('場所を変更');
+}
+
+function cancelVenueDecide() {
+  _pendingSlotId = _pendingSlotLabel = _editingRehearsalId = null;
+  document.getElementById('mVenueInput').classList.remove('show');
+}
+
+async function selectVenue(venueName) {
+  document.getElementById('mVenueInput').classList.remove('show');
+  const venue = venueName || null;
+  if(_editingRehearsalId) {
+    await db.collection('rehearsals').doc(_editingRehearsalId).update({ venue });
+    _editingRehearsalId = null;
+  } else if(_pendingSlotId) {
+    const scriptObj  = scripts.find(sc=>sc.id===rpFilter);
+    const scriptName = scriptObj ? scriptObj.name : '全体';
+    await db.collection('rehearsals').add({
+      scheduleId: curSchedId,
+      slotId:     _pendingSlotId,
+      slotLabel:  _pendingSlotLabel,
+      scriptId:   rpFilter === 'all' ? null : rpFilter,
+      scriptName,
+      venue,
+      createdAt:  firebase.firestore.FieldValue.serverTimestamp()
+    });
+    _pendingSlotId = _pendingSlotLabel = null;
+  }
 }
 
 async function cancelRehearsal(id) {
@@ -2498,6 +2634,7 @@ function renderCalendar() {
           <div class="cal-event-time">${esc(timeLabel)||'—'}</div>
           <div style="flex:1;min-width:0">
             <div class="cal-event-name">${esc(r.slotLabel||'')}</div>
+            ${r.venue?`<div class="cal-event-venue">📍 ${esc(r.venue)}</div>`:''}
             ${r.scriptName?`<div class="cal-event-script">📜 ${esc(r.scriptName)}</div>`:''}
             ${attHtml}
           </div>
