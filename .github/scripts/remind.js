@@ -109,20 +109,20 @@ async function main() {
   const weekday    = WEEKDAYS[dateObj.getUTCDay()];
   const dateLabel  = `${month}月${day}日（${weekday}）`;
 
-  // Embedフィールドを構築（稽古ごとに1セット）
-  const fields = targets.flatMap(r => {
+  // 稽古ごとに1ブロック
+  const description = targets.map(r => {
     const timeLabel = (r.slotLabel || '').replace(/^\d+\/\d+\([^)]+\)\s*/, '').trim() || '—';
     return [
-      { name: '🎭 チーム',  value: `**${r.scriptName || '全体稽古'}**`, inline: false },
-      { name: '🕐 時間',   value: timeLabel,       inline: true },
-      { name: '📍 場所',   value: r.venue || '未定', inline: true },
-    ];
-  });
+      `## 🎭　${r.scriptName || '全体稽古'}`,
+      `🕐　**${timeLabel}**`,
+      `📍　**${r.venue || '未定'}**`,
+    ].join('\n');
+  }).join('\n\n');
 
   const embed = {
-    title: `📅 稽古のお知らせ　${dateLabel}`,
-    color: COLOR_TODAY,
-    fields,
+    title: `📅　本日の稽古　${dateLabel}`,
+    description,
+    color: 0xe67e22, // オレンジで目立つ
     footer: { text: 'メゾン・ドゥ・ココル 稽古管理システム' },
     timestamp: new Date().toISOString()
   };
