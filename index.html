@@ -799,7 +799,7 @@ input,select{font-family:inherit;font-size:inherit;}
     <div id="rpDecidedSection"></div>
 
     <!-- ランキング -->
-    <div style="font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:6px;letter-spacing:.03em">参加可能日ランキング（上位20件）</div>
+    <div style="font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:6px;letter-spacing:.03em">参加可能日ランキング（全日程）</div>
     <div id="rpRankedList" style="max-height:46dvh;overflow-y:auto;margin:0 -2px;padding:0 2px"></div>
 
     <button class="btn btn-s btn-blk" style="margin-top:12px" onclick="closeModal('mRehearsalPlan')">閉じる</button>
@@ -2350,7 +2350,7 @@ function renderRpRanked() {
     return b.okNames.length - a.okNames.length || b.mbNames.length - a.mbNames.length;
   });
 
-  const top   = scored.slice(0, 20);
+  const top   = scored; // 全件表示
   const denom = required ? required.length : Math.max(schedResp.length, 1);
 
   if(top.length === 0 || schedResp.length === 0) {
