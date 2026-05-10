@@ -818,6 +818,22 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
+<!-- 稽古時間編集モーダル -->
+<div class="moverlay" id="mTimeInput" style="z-index:300">
+  <div class="modal">
+    <div class="modal-title">🕐 稽古時間を変更</div>
+    <div id="mTimeLabel" style="text-align:center;font-size:.85rem;color:var(--sub);margin-bottom:14px;line-height:1.4"></div>
+    <div class="fg">
+      <label class="flabel">時間帯（例: 20:00〜、午前、午後②）</label>
+      <input class="finput" id="iTimeInput" type="text" placeholder="20:00〜" autocomplete="off">
+    </div>
+    <div class="frow">
+      <button class="btn btn-s" style="flex:1" onclick="cancelTimeEdit()">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="saveRehearsalTime()">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- 稽古場所選択モーダル -->
 <div class="moverlay" id="mVenueInput" style="z-index:300">
   <div class="modal">
@@ -2425,7 +2441,8 @@ function renderRpDecided() {
           <span class="decided-chip-label">${esc(r.slotLabel)}</span>
           <span class="decided-chip-team">${esc(getRehearsalScriptLabel(r))}</span>
           ${r.venue ? `<span class="decided-chip-venue">📍 ${esc(r.venue)}</span>` : ''}
-          ${canAdmin() ? `<button class="edit-venue-btn" onclick="editRehearsalVenue('${r.id}')">✏️</button>` : ''}
+          ${canAdmin() ? `<button class="edit-venue-btn" onclick="editRehearsalTime('${r.id}')" title="時間を変更">🕐</button>` : ''}
+          ${canAdmin() ? `<button class="edit-venue-btn" onclick="editRehearsalVenue('${r.id}')" title="場所を変更">✏️</button>` : ''}
           ${canAdmin() ? `<button onclick="cancelRehearsal('${r.id}')"
             style="background:none;border:none;color:#bdbdbd;font-size:1.1rem;padding:2px 4px;line-height:1">✕</button>` : ''}
         </div>`
@@ -2547,6 +2564,38 @@ async function selectVenue(venueName) {
 async function cancelRehearsal(id) {
   if(!confirm('この稽古日の決定を取り消しますか？')) return;
   await db.collection('rehearsals').doc(id).delete();
+}
+
+// ---- 時間編集 ----
+let _editingTimeRehearsalId = null;
+
+function editRehearsalTime(id) {
+  _editingTimeRehearsalId = id;
+  const r = (rehearsals.length > 0 ? rehearsals : allRehearsals).find(rh => rh.id === id);
+  const dateLabel = (r?.slotLabel || '').match(/^(\d+\/\d+\([^)]+\))/)?.[1] || '';
+  const timeLabel = (r?.slotLabel || '').replace(/^\d+\/\d+\([^)]+\)\s*/, '').trim();
+  document.getElementById('mTimeLabel').textContent = dateLabel ? `${dateLabel} の時間帯を変更` : '時間帯を変更';
+  document.getElementById('iTimeInput').value = timeLabel;
+  document.getElementById('mTimeInput').classList.add('show');
+  setTimeout(() => document.getElementById('iTimeInput').focus(), 120);
+}
+
+function cancelTimeEdit() {
+  _editingTimeRehearsalId = null;
+  document.getElementById('mTimeInput').classList.remove('show');
+}
+
+async function saveRehearsalTime() {
+  if(!_editingTimeRehearsalId) return;
+  const newTime = document.getElementById('iTimeInput').value.trim();
+  const r = (rehearsals.length > 0 ? rehearsals : allRehearsals).find(rh => rh.id === _editingTimeRehearsalId);
+  if(!r) { cancelTimeEdit(); return; }
+  // slotLabelの日付部分を取得して時間を差し替え
+  const datePart = (r.slotLabel || '').match(/^(\d+\/\d+\([^)]+\))/)?.[1] || '';
+  const newSlotLabel = newTime ? `${datePart} ${newTime}` : datePart;
+  document.getElementById('mTimeInput').classList.remove('show');
+  await db.collection('rehearsals').doc(_editingTimeRehearsalId).update({ slotLabel: newSlotLabel });
+  _editingTimeRehearsalId = null;
 }
 
 // 複数脚本対応: リハーサルの脚本表示ラベルを返す
@@ -2715,7 +2764,7 @@ function renderCalendar() {
         return `<div class="cal-event-item">
           <div class="cal-event-time">${esc(timeLabel)||'—'}</div>
           <div style="flex:1;min-width:0">
-            <div class="cal-event-name">${esc(r.slotLabel||'')}</div>
+            <div class="cal-event-name">${esc(r.slotLabel||'')}${canAdmin()?`<button class="edit-venue-btn" onclick="editRehearsalTime('${r.id}')" style="margin-left:4px" title="時間を変更">🕐</button>`:''}${canAdmin()?`<button class="edit-venue-btn" onclick="editRehearsalVenue('${r.id}')" style="margin-left:2px" title="場所を変更">✏️</button>`:''}</div>
             ${r.venue?`<div class="cal-event-venue">📍 ${esc(r.venue)}</div>`:''}
             ${getRehearsalScriptLabel(r)?`<div class="cal-event-script">📜 ${esc(getRehearsalScriptLabel(r))}</div>`:''}
             ${attHtml}
