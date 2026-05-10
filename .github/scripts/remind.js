@@ -3,6 +3,10 @@ const https = require('https');
 
 // Firebase初期化
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+// GitHub Secretsで改行文字が壊れる場合の修正
+if (serviceAccount.private_key) {
+  serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+}
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
