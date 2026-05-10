@@ -112,11 +112,12 @@ async function main() {
     return;
   }
 
-  // 日付表示を整形
-  const dateObj    = new Date(dateStr + 'T00:00:00+09:00');
-  const month      = dateObj.getMonth() + 1;
-  const day        = dateObj.getDate();
-  const weekday    = WEEKDAYS[dateObj.getDay()];
+  // 日付表示を整形（YYYY-MM-DDから直接パースしてタイムゾーンのズレを防ぐ）
+  const [y, m, d]  = dateStr.split('-').map(Number);
+  const dateObj    = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  const month      = m;
+  const day        = d;
+  const weekday    = WEEKDAYS[dateObj.getUTCDay()];
   const dateLabel  = `${month}月${day}日（${weekday}）`;
 
   const title = isMorning
