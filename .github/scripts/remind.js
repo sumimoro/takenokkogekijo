@@ -112,8 +112,15 @@ async function main() {
   // 稽古ごとに1ブロック
   const description = targets.map(r => {
     const timeLabel = (r.slotLabel || '').replace(/^\d+\/\d+\([^)]+\)\s*/, '').trim() || '—';
+    // 複数脚本対応
+    let scriptLabel;
+    if(r.scripts && r.scripts.length > 0) {
+      scriptLabel = r.scripts.map(s => s.name).join('・');
+    } else {
+      scriptLabel = r.scriptName || '全体稽古';
+    }
     return [
-      `## 🎭　${r.scriptName || '全体稽古'}`,
+      `## 🎭　${scriptLabel}`,
       `🕐　**${timeLabel}**`,
       `📍　**${r.venue || '未定'}**`,
     ].join('\n');

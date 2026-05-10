@@ -806,6 +806,18 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
+<!-- 脚本選択モーダル（稽古日決定） -->
+<div class="moverlay" id="mScriptSelect" style="z-index:310">
+  <div class="modal">
+    <div class="modal-title">📜 稽古する脚本を選択</div>
+    <div id="mScriptSelectLabel" style="text-align:center;font-size:.85rem;color:var(--sub);margin-bottom:14px;line-height:1.5"></div>
+    <div id="scriptSelectChips" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px"></div>
+    <div style="font-size:.78rem;color:var(--sub);margin-bottom:12px">※ 複数選択可。選択なしの場合は全体稽古として登録します</div>
+    <button class="btn btn-p btn-blk" style="margin-top:0" onclick="confirmScriptSelect()">次へ：場所を選択 →</button>
+    <button class="btn btn-s btn-blk" style="margin-top:8px" onclick="cancelScriptSelect()">キャンセル</button>
+  </div>
+</div>
+
 <!-- 稽古場所選択モーダル -->
 <div class="moverlay" id="mVenueInput" style="z-index:300">
   <div class="modal">
@@ -2245,7 +2257,7 @@ function renderDecidedInDetail(decided) {
     + decided.map(r =>
         `<div class="decided-chip">
           <span class="decided-chip-label">${esc(r.slotLabel)}</span>
-          <span class="decided-chip-team">${esc(r.scriptName||r.teamName||'')}</span>
+          <span class="decided-chip-team">${esc(getRehearsalScriptLabel(r))}</span>
           ${r.venue ? `<span class="decided-chip-venue">📍 ${esc(r.venue)}</span>` : ''}
         </div>`
       ).join('');
@@ -2357,9 +2369,14 @@ function renderRpRanked() {
   el.innerHTML = top.map((item, rank) => {
     const { sl, ans, okNames, mbNames, allOk, allOkMb } = item;
     const okN = okNames.length, mbN = mbNames.length;
-    const isDecided = rehearsals.some(r =>
-      r.slotId === sl.id && (r.scriptId||'all') === rpFilter
-    );
+    const isDecided = rehearsals.some(r => {
+      if(r.slotId !== sl.id) return false;
+      if(rpFilter === 'all') return true;
+      // 複数脚本配列で確認
+      if(r.scripts && r.scripts.length > 0) return r.scripts.some(s => s.id === rpFilter);
+      // 後方互換: 単一scriptId
+      return (r.scriptId || null) === rpFilter;
+    });
 
     const badge = allOk  ? `<div style="font-size:.72rem;font-weight:700;color:var(--maeure);background:#e8f5e9;padding:2px 8px;border-radius:8px;margin-top:3px">🎉 全員参加可</div>`
                 : allOkMb ? `<div style="font-size:.72rem;color:#f57c00;background:#fff8e1;padding:2px 8px;border-radius:8px;margin-top:3px">△込みで全員可</div>`
@@ -2406,7 +2423,7 @@ function renderRpDecided() {
     + rehearsals.map(r =>
         `<div class="decided-chip" style="margin-bottom:6px">
           <span class="decided-chip-label">${esc(r.slotLabel)}</span>
-          <span class="decided-chip-team">${esc(r.scriptName||r.teamName||'')}</span>
+          <span class="decided-chip-team">${esc(getRehearsalScriptLabel(r))}</span>
           ${r.venue ? `<span class="decided-chip-venue">📍 ${esc(r.venue)}</span>` : ''}
           ${canAdmin() ? `<button class="edit-venue-btn" onclick="editRehearsalVenue('${r.id}')">✏️</button>` : ''}
           ${canAdmin() ? `<button onclick="cancelRehearsal('${r.id}')"
@@ -2419,6 +2436,7 @@ function renderRpDecided() {
 let _pendingSlotId      = null;
 let _pendingSlotLabel   = null;
 let _editingRehearsalId = null;
+let _pendingScripts     = []; // [{id, name}] 複数脚本選択用
 
 function _openVenueModal(labelText) {
   document.getElementById('mVenueLabel').textContent = labelText;
@@ -2436,9 +2454,55 @@ function decideRehearsal(slotId, slotLabel) {
   _pendingSlotId      = slotId;
   _pendingSlotLabel   = slotLabel.trim();
   _editingRehearsalId = null;
-  const scriptObj  = scripts.find(sc=>sc.id===rpFilter);
-  const scriptName = scriptObj ? scriptObj.name : '全体';
-  _openVenueModal(`「${_pendingSlotLabel}」を ${scriptName} の稽古日に決定します`);
+  _pendingScripts     = [];
+  // rpFilterが特定の脚本の場合はあらかじめ選択
+  if(rpFilter !== 'all') {
+    const sc = scripts.find(sc => sc.id === rpFilter);
+    if(sc) _pendingScripts = [{id: sc.id, name: sc.name}];
+  }
+  _openScriptSelectModal();
+}
+
+function _openScriptSelectModal() {
+  document.getElementById('mScriptSelectLabel').textContent = `「${_pendingSlotLabel}」の稽古内容を選択してください`;
+  renderScriptSelectChips();
+  document.getElementById('mScriptSelect').classList.add('show');
+}
+
+function renderScriptSelectChips() {
+  const el = document.getElementById('scriptSelectChips');
+  if(scripts.length === 0) {
+    el.innerHTML = '<div style="color:var(--sub);font-size:.85rem">脚本がありません。全体稽古として登録します。</div>';
+    return;
+  }
+  el.innerHTML = scripts.map(sc => {
+    const sel = _pendingScripts.some(s => s.id === sc.id);
+    return `<button type="button" onclick="toggleScriptSelect('${sc.id}','${esc(sc.name)}')"
+      style="padding:10px 18px;border-radius:20px;border:2px solid;font-size:.95rem;font-weight:600;cursor:pointer;
+      background:${sel?'var(--primary)':'#fff'};color:${sel?'#fff':'var(--sub)'};
+      border-color:${sel?'var(--primary)':'var(--border)'}">📜 ${esc(sc.name)}</button>`;
+  }).join('');
+}
+
+function toggleScriptSelect(id, name) {
+  const idx = _pendingScripts.findIndex(s => s.id === id);
+  if(idx >= 0) _pendingScripts.splice(idx, 1);
+  else _pendingScripts.push({id, name});
+  renderScriptSelectChips();
+}
+
+function confirmScriptSelect() {
+  document.getElementById('mScriptSelect').classList.remove('show');
+  const scriptLabel = _pendingScripts.length > 0
+    ? _pendingScripts.map(s => s.name).join('・')
+    : '全体稽古';
+  _openVenueModal(`「${_pendingSlotLabel}」\n${scriptLabel} の稽古日に決定します`);
+}
+
+function cancelScriptSelect() {
+  _pendingSlotId = _pendingSlotLabel = null;
+  _pendingScripts = [];
+  document.getElementById('mScriptSelect').classList.remove('show');
 }
 
 function editRehearsalVenue(id) {
@@ -2460,24 +2524,35 @@ async function selectVenue(venueName) {
     await db.collection('rehearsals').doc(_editingRehearsalId).update({ venue });
     _editingRehearsalId = null;
   } else if(_pendingSlotId) {
-    const scriptObj  = scripts.find(sc=>sc.id===rpFilter);
-    const scriptName = scriptObj ? scriptObj.name : '全体';
+    // _pendingScripts: [{id, name}] 複数対応
+    const scriptsArr = _pendingScripts.length > 0 ? _pendingScripts : [];
+    const scriptName = scriptsArr.length > 0 ? scriptsArr.map(s => s.name).join('・') : '全体稽古';
+    // 後方互換: 1脚本の場合のみ scriptId を設定
+    const scriptId   = scriptsArr.length === 1 ? scriptsArr[0].id : null;
     await db.collection('rehearsals').add({
       scheduleId: curSchedId,
       slotId:     _pendingSlotId,
       slotLabel:  _pendingSlotLabel,
-      scriptId:   rpFilter === 'all' ? null : rpFilter,
-      scriptName,
+      scriptId,          // 後方互換
+      scriptName,        // 後方互換 & 表示用
+      scripts:    scriptsArr, // 複数脚本対応
       venue,
       createdAt:  firebase.firestore.FieldValue.serverTimestamp()
     });
     _pendingSlotId = _pendingSlotLabel = null;
+    _pendingScripts = [];
   }
 }
 
 async function cancelRehearsal(id) {
   if(!confirm('この稽古日の決定を取り消しますか？')) return;
   await db.collection('rehearsals').doc(id).delete();
+}
+
+// 複数脚本対応: リハーサルの脚本表示ラベルを返す
+function getRehearsalScriptLabel(r) {
+  if(r.scripts && r.scripts.length > 0) return r.scripts.map(s => s.name).join('・');
+  return r.scriptName || r.teamName || '全体稽古';
 }
 
 // ==================== CALENDAR ====================
@@ -2511,14 +2586,21 @@ function subscribeAllSchedResponses() {
 function getSlotAttendees(rehearsal) {
   const responses = allSchedResponses.filter(r => r.scheduleId === rehearsal.scheduleId);
   const ok = [], maybe = [];
-  // スクリプトがある場合は該当メンバーのみ
+  // 複数脚本対応: scripts配列 → 各脚本のメンバーを集める
   let filterNames = null;
-  if(rehearsal.scriptId && rehearsal.scriptId !== 'all') {
-    const sc = scripts.find(s => s.id === rehearsal.scriptId);
-    if(sc) {
-      const names = [...(sc.dirNames||[]), ...(sc.actNames||[])];
-      if(names.length > 0) filterNames = new Set(names);
-    }
+  const scriptsList = rehearsal.scripts && rehearsal.scripts.length > 0
+    ? rehearsal.scripts
+    : (rehearsal.scriptId && rehearsal.scriptId !== 'all' ? [{id: rehearsal.scriptId}] : []);
+  if(scriptsList.length > 0) {
+    const nameSet = new Set();
+    scriptsList.forEach(scRef => {
+      const sc = scripts.find(s => s.id === scRef.id);
+      if(sc) {
+        (sc.dirNames||[]).forEach(n => nameSet.add(n));
+        (sc.actNames||[]).forEach(n => nameSet.add(n));
+      }
+    });
+    if(nameSet.size > 0) filterNames = nameSet;
   }
   responses.forEach(resp => {
     const name = resp.memberName;
@@ -2635,7 +2717,7 @@ function renderCalendar() {
           <div style="flex:1;min-width:0">
             <div class="cal-event-name">${esc(r.slotLabel||'')}</div>
             ${r.venue?`<div class="cal-event-venue">📍 ${esc(r.venue)}</div>`:''}
-            ${r.scriptName?`<div class="cal-event-script">📜 ${esc(r.scriptName)}</div>`:''}
+            ${getRehearsalScriptLabel(r)?`<div class="cal-event-script">📜 ${esc(getRehearsalScriptLabel(r))}</div>`:''}
             ${attHtml}
           </div>
         </div>`;
