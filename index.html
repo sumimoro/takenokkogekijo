@@ -13,8 +13,8 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --primary:#bf4500;
-  --primary-d:#8f3200;
+  --primary:#d9804a;
+  --primary-d:#b5612e;
   --primary-l:#fff3e0;
   --gold:#b8860b;
   --gold-l:#fdf8e1;
@@ -48,7 +48,7 @@ input,select{font-family:inherit;font-size:inherit;}
 #homeScreen.hidden{display:none;}
 .home-top{display:flex;flex-direction:column;align-items:center;
   padding-top:calc(env(safe-area-inset-top,0px) + 52px);margin-bottom:32px;}
-.home-logo{font-size:3rem;margin-bottom:8px;}
+.home-logo{margin-bottom:8px;}.home-logo img{width:120px;height:120px;object-fit:cover;border-radius:24px;box-shadow:0 4px 16px rgba(0,0,0,.18);}
 .home-appname{font-size:1.6rem;font-weight:800;color:#fff;letter-spacing:.08em;}
 .home-sub{font-size:.9rem;color:rgba(255,255,255,.65);margin-top:6px;}
 .home-grid{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
@@ -438,9 +438,9 @@ input,select{font-family:inherit;font-size:inherit;}
   <!-- Home Screen -->
   <div id="homeScreen" class="hidden">
     <div class="home-top">
-      <div class="home-logo">🎭</div>
+      <div class="home-logo"><img src="logo.png" alt="たけのっ子劇場"></div>
       <div class="home-appname">たけのっ子劇場</div>
-      <div class="home-sub">保護者名を選んでください</div>
+      <div class="home-sub">あなたは誰ですか？</div>
     </div>
     <div class="home-grid" id="homeGrid"></div>
     <button class="home-enter" id="homeEnterBtn" disabled onclick="enterApp()">
@@ -451,7 +451,7 @@ input,select{font-family:inherit;font-size:inherit;}
   <!-- Header -->
   <div class="hdr">
     <div class="hdr-top">
-      <span class="hdr-title">🎭 たけのっ子劇場</span>
+      <span class="hdr-title">たけのっ子劇場</span>
       <button class="hdr-member" id="hdrMember" onclick="showHomeScreen()" style="display:none">
         <div class="hdr-member-av" id="hdrMemberAv"></div>
         <span id="hdrMemberName"></span>
@@ -475,7 +475,7 @@ input,select{font-family:inherit;font-size:inherit;}
         </div>
         <div class="stat">
           <div class="stat-n" style="color:var(--oki)" id="sOki">0</div>
-          <div class="stat-l">置きチケ</div>
+          <div class="stat-l">予約</div>
         </div>
         <div class="stat" id="sRemainCard" style="display:none">
           <div class="stat-n" id="sRemain" style="color:#c62828">—</div>
@@ -485,7 +485,7 @@ input,select{font-family:inherit;font-size:inherit;}
       <div class="filters" id="filterRow">
         <button class="ftab act" onclick="setFilter('all',this)">すべて</button>
         <button class="ftab" onclick="setFilter('maeure',this)">前売り</button>
-        <button class="ftab" onclick="setFilter('okichike',this)">置きチケ</button>
+        <button class="ftab" onclick="setFilter('okichike',this)">予約</button>
       </div>
       <div class="card" id="ticketList">
 
@@ -526,10 +526,10 @@ input,select{font-family:inherit;font-size:inherit;}
       <div class="card" id="scriptListEl"></div>
 
 
-      <div class="sec-lbl">保護者</div>
+      <div class="sec-lbl">おとな</div>
       <div class="card" id="memberListEl"></div>
 
-      <div class="sec-lbl">子役者</div>
+      <div class="sec-lbl">こども</div>
       <div class="card" id="childrenListEl"></div>
 
       <div class="sec-lbl">稽古場所マスタ</div>
@@ -570,7 +570,7 @@ input,select{font-family:inherit;font-size:inherit;}
     <div class="modal-title">チケット追加</div>
     <div class="tpills">
       <button class="tpill pm" id="pill-maeure"   onclick="selType('maeure')">前売り</button>
-      <button class="tpill"    id="pill-okichike"  onclick="selType('okichike')">置きチケ</button>
+      <button class="tpill"    id="pill-okichike"  onclick="selType('okichike')">予約</button>
     </div>
     <div class="fg">
       <label class="flabel" id="buyerLabel">購入者名（任意）</label>
@@ -639,13 +639,13 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
-<!-- 子役者追加 -->
+<!-- こども追加 -->
 <div class="moverlay" id="mAddChild">
   <div class="modal">
-    <div class="modal-title" id="mAddChildTitle">子役者を追加</div>
+    <div class="modal-title" id="mAddChildTitle">こどもを追加</div>
     <div class="fg">
       <label class="flabel">お名前</label>
-      <input class="finput" id="iChildName" type="text" placeholder="子役者のお名前" autocomplete="off">
+      <input class="finput" id="iChildName" type="text" placeholder="こどものお名前" autocomplete="off">
     </div>
     <div class="frow">
       <button class="btn btn-s" style="flex:1" onclick="closeModal('mAddChild')">キャンセル</button>
@@ -705,7 +705,7 @@ input,select{font-family:inherit;font-size:inherit;}
 <div class="moverlay" id="mSchedResponse">
   <div class="modal">
     <div class="modal-title">出欠を回答</div>
-    <!-- 子供ピッカー（保護者に子役者が登録されている場合） -->
+    <!-- 子供ピッカー（おとなにこどもが登録されている場合） -->
     <div class="fg" id="respChildGroup" style="display:none">
       <label class="flabel">お子様を選択</label>
       <div id="respChildChips" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0"></div>
@@ -742,10 +742,6 @@ input,select{font-family:inherit;font-size:inherit;}
     <div class="fg">
       <label class="flabel">場面名</label>
       <input class="finput" id="iScriptName" type="text" placeholder="例：第一場" autocomplete="off">
-    </div>
-    <div class="fg">
-      <label class="flabel">🎬 演出（複数選択可）</label>
-      <div id="scriptDirChips" style="display:flex;flex-wrap:wrap;gap:7px;padding:4px 0"></div>
     </div>
     <div class="fg">
       <label class="flabel">🎭 役者（複数選択可）</label>
@@ -839,8 +835,8 @@ const db = firebase.firestore();
 db.enablePersistence().catch(()=>{});
 
 // ==================== STATE ====================
-let members   = [];     // 保護者一覧
-let children  = [];     // 子役者一覧
+let members   = [];     // おとな一覧
+let children  = [];     // こども一覧
 let tickets   = [];     // チケット一覧
 let filter    = 'all';  // チケットフィルター
 let curType     = 'maeure'; // 新規追加の種別
@@ -850,7 +846,7 @@ let detailId  = null;   // 詳細表示中のチケットID
 let unsubMembers  = null;
 let unsubChildren = null;
 let unsubTickets  = null;
-let respChildId   = null; // 回答選択中の子役者ID
+let respChildId   = null; // 回答選択中のこどもID
 
 // ==================== INIT ====================
 // ==================== CURRENT MEMBER ====================
@@ -1058,7 +1054,7 @@ function renderTickets() {
 function renderOki() {
   const el = document.getElementById('okiList');
   const okis = tickets.filter(t=>t.type==='okichike' && t.status!=='cancelled');
-  if(okis.length === 0) { el.innerHTML = empty('📋','置きチケはありません'); return; }
+  if(okis.length === 0) { el.innerHTML = empty('📋','予約はありません'); return; }
 
   const arrivedN = okis.filter(t=>t.status==='arrived').length;
   const sorted = [...okis].sort((a,b) => {
@@ -1069,7 +1065,7 @@ function renderOki() {
 
   el.innerHTML = `
     <div class="oki-hdr">
-      <span style="font-weight:700">置きチケ一覧</span>
+      <span style="font-weight:700">予約一覧</span>
       <span class="oki-prog">${arrivedN} / ${okis.length} 受取済</span>
     </div>
     ${sorted.map(t => {
@@ -1189,7 +1185,7 @@ function renderChildrenSettings() {
   if(!el) return;
   const admin = canAdmin();
   if(!members.length) {
-    el.innerHTML = '<div style="color:var(--sub);font-size:.88rem;padding:6px 0">先に保護者を登録してください</div>';
+    el.innerHTML = '<div style="color:var(--sub);font-size:.88rem;padding:6px 0">先におとなを登録してください</div>';
     return;
   }
   el.innerHTML = members.map(parent => {
@@ -1211,7 +1207,7 @@ let _addChildParentId = null;
 
 function openAddChild(parentId, parentName) {
   _addChildParentId = parentId;
-  document.getElementById('mAddChildTitle').textContent = parentName + ' の子役者を追加';
+  document.getElementById('mAddChildTitle').textContent = parentName + ' のこどもを追加';
   document.getElementById('iChildName').value = '';
   document.getElementById('mAddChild').classList.add('show');
   setTimeout(() => document.getElementById('iChildName').focus(), 120);
@@ -1302,7 +1298,7 @@ async function saveTicket() {
   const memberId = sel.disabled ? (currentMember?.id || '') : sel.value;
   const count = ticketCount;
   const note = document.getElementById('iNote').value.trim();
-  if(curType === 'okichike' && !buyer) { alert('置きチケは購入者名を入力してください'); return; }
+  if(curType === 'okichike' && !buyer) { alert('予約は購入者名を入力してください'); return; }
   if(!memberId) { alert('メンバーを選択してください'); return; }
   closeModal('mAddTicket');
   await db.collection('tickets').add({
@@ -1332,7 +1328,7 @@ function renderReception() {
   const tojitsuEntered  = recData.tojitsuEntered  || 0;
   const shoutaiEntered  = recData.shoutaiEntered  || 0;
 
-  // 置きチケ
+  // 予約
   const okis = tickets.filter(t=>t.type==='okichike');
   const okiSorted = [...okis].sort((a,b)=>{
     if(a.entered && !b.entered) return 1;
@@ -1374,11 +1370,11 @@ function renderReception() {
     </div>
 
     <div class="card">
-      <div class="card-title" style="color:var(--oki)">置きチケ受取確認
+      <div class="card-title" style="color:var(--oki)">予約受取確認
         <span style="font-weight:400;font-size:.8rem;color:var(--sub);margin-left:8px">${okis.filter(t=>t.entered).length} / ${okis.length}</span>
       </div>
       ${okis.length === 0
-        ? `<div style="color:var(--sub);font-size:.88rem;padding:4px 0">置きチケはありません</div>`
+        ? `<div style="color:var(--sub);font-size:.88rem;padding:4px 0">予約はありません</div>`
         : okiSorted.map(t => {
             const mn = members.find(m=>m.id===t.memberId)?.name || '';
             const done = !!t.entered;
@@ -1586,7 +1582,7 @@ async function toggleAdmin(id, makeAdmin) {
 
 // ==================== HELPERS ====================
 function typeName(t) {
-  return {maeure:'前売り', okichike:'置きチケ', tojitsu:'当日券'}[t] || t;
+  return {maeure:'前売り', okichike:'予約', tojitsu:'当日券'}[t] || t;
 }
 function statusName(s) {
   return {active:'有効', arrived:'受取済', cancelled:'キャンセル'}[s] || s;
@@ -2036,7 +2032,6 @@ async function deleteVenue(id, name) {
 let scripts      = [];
 let unsubScripts = null;
 let editScriptId = null;
-let editDirNames = [];
 let editActNames = [];
 
 function subscribeScripts() {
@@ -2060,7 +2055,6 @@ function renderScriptSettings() {
     <div class="sitem">
       <div class="sitem-info">
         <div class="sitem-name">${esc(s.name)}</div>
-        <div class="sitem-sub">🎬 ${(s.dirNames||[]).join('・')||'—'}</div>
         <div class="sitem-sub">🎭 ${(s.actNames||[]).join('・')||'—'}</div>
       </div>
       <div class="sitem-acts">
@@ -2073,8 +2067,7 @@ function renderScriptSettings() {
 function openScriptEdit(id) {
   editScriptId = id || null;
   const s = id ? scripts.find(sc=>sc.id===id) : null;
-  editDirNames = s ? [...(s.dirNames||s.directorNames||[])] : [];
-  editActNames = s ? [...(s.actNames||s.actorNames||[])]    : [];
+  editActNames = s ? [...(s.actNames||s.actorNames||[])] : [];
   document.getElementById('mScriptTitle').textContent = id ? '場面を編集' : '場面を追加';
   document.getElementById('iScriptName').value = s?.name || '';
   document.getElementById('mScriptDelRow').style.display = id ? 'block' : 'none';
@@ -2084,7 +2077,6 @@ function openScriptEdit(id) {
 }
 
 function renderScriptChips() {
-  renderChipGroup('scriptDirChips', editDirNames, 'toggleDir');
   renderChipGroup('scriptActChips', editActNames, 'toggleAct');
 }
 
@@ -2093,7 +2085,7 @@ function renderChipGroup(elId, selected, fn) {
   if(!el) return;
   const isAct = elId === 'scriptActChips';
   const list  = isAct ? children : members;
-  const emptyMsg = isAct ? '先に子役者を登録してください' : '先に保護者を登録してください';
+  const emptyMsg = isAct ? '先にこどもを登録してください' : '先におとなを登録してください';
   if(list.length === 0) {
     el.innerHTML = `<div style="font-size:.82rem;color:var(--sub)">${emptyMsg}</div>`;
     return;
@@ -2107,11 +2099,6 @@ function renderChipGroup(elId, selected, fn) {
   }).join('');
 }
 
-function toggleDir(name) {
-  const i = editDirNames.indexOf(name);
-  i >= 0 ? editDirNames.splice(i,1) : editDirNames.push(name);
-  renderScriptChips();
-}
 function toggleAct(name) {
   const i = editActNames.indexOf(name);
   i >= 0 ? editActNames.splice(i,1) : editActNames.push(name);
@@ -2121,7 +2108,7 @@ function toggleAct(name) {
 async function saveScript() {
   const name = document.getElementById('iScriptName').value.trim();
   if(!name) { alert('場面名を入力してください'); return; }
-  const data = { name, dirNames: editDirNames, actNames: editActNames };
+  const data = { name, actNames: editActNames };
   closeModal('mScriptEdit');
   if(editScriptId) {
     await db.collection('scripts').doc(editScriptId).update(data);
@@ -2223,9 +2210,8 @@ function renderRpRanked() {
   const slots = s.slots || [];
 
   const scriptObj = scripts.find(sc=>sc.id===rpFilter) || null;
-  const dirNames  = scriptObj ? (scriptObj.dirNames||[]) : [];
   const actNames  = scriptObj ? (scriptObj.actNames||[]) : [];
-  const required  = scriptObj ? [...dirNames, ...actNames]    : null;
+  const required  = scriptObj ? [...actNames] : null;
 
   const scored = slots.map(sl => {
     const ans = {};
@@ -2288,11 +2274,9 @@ function renderRpRanked() {
 
     let namesHtml = '';
     if(scriptObj) {
-      const dRow = dirNames.map(n=>chip(n,ans[n]||'ng')).join('');
       const aRow = actNames.map(n=>chip(n,ans[n]||'ng')).join('');
       namesHtml = `<div class="rp-names" style="margin-top:4px">
-        ${dirNames.length?`<span style="font-size:.7rem;margin-right:2px">🎬</span>${dRow}`:''}
-        ${actNames.length?`<span style="font-size:.7rem;margin:0 2px 0 5px">🎭</span>${aRow}`:''}
+        ${actNames.length?`<span style="font-size:.7rem;margin-right:2px">🎭</span>${aRow}`:''}
       </div>`;
     } else {
       namesHtml = `<div class="rp-names">
@@ -2533,7 +2517,6 @@ function getSlotAttendees(rehearsal) {
     scriptsList.forEach(scRef => {
       const sc = scripts.find(s => s.id === scRef.id);
       if(sc) {
-        (sc.dirNames||[]).forEach(n => nameSet.add(n));
         (sc.actNames||[]).forEach(n => nameSet.add(n));
       }
     });
