@@ -440,7 +440,7 @@ input,select{font-family:inherit;font-size:inherit;}
     <div class="home-top">
       <div class="home-logo">🎭</div>
       <div class="home-appname">たけのっ子劇場</div>
-      <div class="home-sub">あなたは誰ですか？</div>
+      <div class="home-sub">保護者名を選んでください</div>
     </div>
     <div class="home-grid" id="homeGrid"></div>
     <button class="home-enter" id="homeEnterBtn" disabled onclick="enterApp()">
@@ -526,8 +526,11 @@ input,select{font-family:inherit;font-size:inherit;}
       <div class="card" id="scriptListEl"></div>
 
 
-      <div class="sec-lbl">メンバー</div>
+      <div class="sec-lbl">保護者</div>
       <div class="card" id="memberListEl"></div>
+
+      <div class="sec-lbl">子役者</div>
+      <div class="card" id="childrenListEl"></div>
 
       <div class="sec-lbl">稽古場所マスタ</div>
       <div class="card" id="venueListEl"></div>
@@ -636,6 +639,21 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
+<!-- 子役者追加 -->
+<div class="moverlay" id="mAddChild">
+  <div class="modal">
+    <div class="modal-title" id="mAddChildTitle">子役者を追加</div>
+    <div class="fg">
+      <label class="flabel">お名前</label>
+      <input class="finput" id="iChildName" type="text" placeholder="子役者のお名前" autocomplete="off">
+    </div>
+    <div class="frow">
+      <button class="btn btn-s" style="flex:1" onclick="closeModal('mAddChild')">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="saveChild()">追加</button>
+    </div>
+  </div>
+</div>
+
 <!-- 日程調整 作成 -->
 <div class="moverlay" id="mCreateSched">
   <div class="modal">
@@ -687,12 +705,19 @@ input,select{font-family:inherit;font-size:inherit;}
 <div class="moverlay" id="mSchedResponse">
   <div class="modal">
     <div class="modal-title">出欠を回答</div>
-    <div class="fg">
+    <!-- 子供ピッカー（保護者に子役者が登録されている場合） -->
+    <div class="fg" id="respChildGroup" style="display:none">
+      <label class="flabel">お子様を選択</label>
+      <div id="respChildChips" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0"></div>
+      <div id="respEditHint" style="font-size:.75rem;color:var(--oki);margin-top:4px;display:none">※ 既存の回答を更新します</div>
+    </div>
+    <!-- フリーテキスト（管理者・子供未登録の場合） -->
+    <div class="fg" id="respNameGroup">
       <label class="flabel">お名前</label>
       <input class="finput" id="iRespName" type="text" placeholder="名前を入力" autocomplete="off"
         list="memberNameList" oninput="onRespNameInput(this.value)">
       <datalist id="memberNameList"></datalist>
-      <div id="respEditHint" style="font-size:.75rem;color:var(--oki);margin-top:4px;display:none">※ この名前の回答を上書きします</div>
+      <div id="respEditHintName" style="font-size:.75rem;color:var(--oki);margin-top:4px;display:none">※ この名前の回答を上書きします</div>
     </div>
     <div class="fg">
       <label class="flabel">各日程の出欠 <span style="color:var(--sub);font-weight:400">（○可 △△ ×不可）</span></label>
@@ -814,15 +839,18 @@ const db = firebase.firestore();
 db.enablePersistence().catch(()=>{});
 
 // ==================== STATE ====================
-let members   = [];     // 担当者一覧
+let members   = [];     // 保護者一覧
+let children  = [];     // 子役者一覧
 let tickets   = [];     // チケット一覧
 let filter    = 'all';  // チケットフィルター
 let curType     = 'maeure'; // 新規追加の種別
 let ticketCount = 1;
 let detailId  = null;   // 詳細表示中のチケットID
 
-let unsubMembers = null;
-let unsubTickets = null;
+let unsubMembers  = null;
+let unsubChildren = null;
+let unsubTickets  = null;
+let respChildId   = null; // 回答選択中の子役者ID
 
 // ==================== INIT ====================
 // ==================== CURRENT MEMBER ====================
@@ -880,6 +908,7 @@ function updateAdminUI() {
   // 設定タブ再描画（管理者トグル含む）
   renderVenueSettings();
   renderMemberSettings();
+  renderChildrenSettings();
   renderScriptSettings();
   // 日程リスト再描画（稽古日を決めるボタン）
   renderSchedList();
@@ -903,6 +932,7 @@ function updateHdrMember() {
 window.addEventListener('DOMContentLoaded', () => {
   loadCurrentMember();
   subscribeMembers();
+  subscribeChildren();
   subscribeTickets();
   subscribeRecData();
   subscribeSchedules();
@@ -946,6 +976,16 @@ function subscribeMembers() {
       renderHomeGrid();
     }
   }, () => { hideLoading(); showHomeScreen(); });
+}
+
+function subscribeChildren() {
+  if(unsubChildren) unsubChildren();
+  unsubChildren = db.collection('children').onSnapshot(snap => {
+    children = snap.docs.map(d => ({id:d.id,...d.data()}));
+    children.sort((a,b) => (a.order??Infinity) - (b.order??Infinity));
+    renderChildrenSettings();
+    renderScriptSettings();
+  }, ()=>{ renderChildrenSettings(); });
 }
 
 function subscribeTickets() {
@@ -1142,6 +1182,57 @@ function renderMemberSettings() {
       </div>
     </div>
   `).join('') + (adminArea ? `<button class="btn btn-s btn-blk" onclick="openAddMember()">＋ メンバーを追加</button>` : '');
+}
+
+function renderChildrenSettings() {
+  const el = document.getElementById('childrenListEl');
+  if(!el) return;
+  const admin = canAdmin();
+  if(!members.length) {
+    el.innerHTML = '<div style="color:var(--sub);font-size:.88rem;padding:6px 0">先に保護者を登録してください</div>';
+    return;
+  }
+  el.innerHTML = members.map(parent => {
+    const myKids = children.filter(c => c.parentId === parent.id);
+    return `<div class="sitem" style="flex-direction:column;align-items:flex-start;gap:6px">
+      <div class="sitem-name" style="font-weight:700">${esc(parent.name)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        ${myKids.map(c => `<span style="background:#fff3e0;border:1.5px solid var(--primary);border-radius:14px;padding:3px 10px;font-size:.82rem;display:flex;align-items:center;gap:4px">
+          ${esc(c.name)}
+          ${admin ? `<button onclick="deleteChild('${c.id}','${esc(c.name)}')" style="background:none;border:none;color:#bdbdbd;font-size:1rem;padding:0;line-height:1;cursor:pointer">✕</button>` : ''}
+        </span>`).join('')}
+        ${admin ? `<button class="btn btn-s btn-sm" onclick="openAddChild('${parent.id}','${esc(parent.name)}')">＋ 追加</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let _addChildParentId = null;
+
+function openAddChild(parentId, parentName) {
+  _addChildParentId = parentId;
+  document.getElementById('mAddChildTitle').textContent = parentName + ' の子役者を追加';
+  document.getElementById('iChildName').value = '';
+  document.getElementById('mAddChild').classList.add('show');
+  setTimeout(() => document.getElementById('iChildName').focus(), 120);
+}
+
+async function saveChild() {
+  const name = document.getElementById('iChildName').value.trim();
+  if(!name) { alert('名前を入力してください'); return; }
+  const siblingCount = children.filter(c => c.parentId === _addChildParentId).length;
+  closeModal('mAddChild');
+  await db.collection('children').add({
+    name,
+    parentId: _addChildParentId,
+    order: siblingCount,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+async function deleteChild(id, name) {
+  if(!confirm(`「${name}」を削除しますか？`)) return;
+  await db.collection('children').doc(id).delete();
 }
 
 function renderMemberSel() {
@@ -1661,18 +1752,17 @@ function openRespond() {
   const s = schedules.find(s=>s.id===curSchedId);
   if(!s) return;
 
-  // Populate name datalist from members
-  document.getElementById('memberNameList').innerHTML =
-    members.map(m=>`<option value="${esc(m.name)}">`).join('');
-
-  // ログイン中メンバー優先、なければlocalStorage
-  const savedName = currentMember?.name || localStorage.getItem('schedRespName') || '';
-  document.getElementById('iRespName').value = savedName;
-
-  // Init answers
   respAnswers = {};
+  respChildId = null;
 
-  // Render slot rows
+  const myChildren = currentMember
+    ? children.filter(c => c.parentId === currentMember.id)
+    : [];
+
+  const childGroup = document.getElementById('respChildGroup');
+  const nameGroup  = document.getElementById('respNameGroup');
+
+  // Render slot rows (common)
   const slots = s.slots || [];
   document.getElementById('respSlotRows').innerHTML = slots.map(sl =>
     `<div class="ans-row">
@@ -1685,25 +1775,73 @@ function openRespond() {
     </div>`
   ).join('');
 
-  // If saved name has existing response, pre-fill
-  if(savedName) loadExistingAnswers(savedName);
+  if(myChildren.length > 0) {
+    // 子供ピッカーモード
+    childGroup.style.display = '';
+    nameGroup.style.display  = 'none';
+    renderRespChildChips(myChildren, null);
+    // 最初の子を自動選択
+    selectRespChild(myChildren[0].id, myChildren[0].name);
+  } else {
+    // フリーテキストモード
+    childGroup.style.display = 'none';
+    nameGroup.style.display  = '';
+    document.getElementById('memberNameList').innerHTML =
+      members.map(m=>`<option value="${esc(m.name)}">`).join('');
+    const savedName = currentMember?.name || localStorage.getItem('schedRespName') || '';
+    document.getElementById('iRespName').value = savedName;
+    const nameInput = document.getElementById('iRespName');
+    nameInput.readOnly = !!currentMember;
+    nameInput.style.background = currentMember ? '#f5f5f5' : '';
+    nameInput.style.color = currentMember ? '#555' : '';
+    if(savedName) loadExistingAnswers(savedName);
+    if(!currentMember) setTimeout(() => nameInput.focus(), 120);
+  }
 
-  const nameInput = document.getElementById('iRespName');
-  nameInput.readOnly = !!currentMember;
-  nameInput.style.background = currentMember ? '#f5f5f5' : '';
-  nameInput.style.color = currentMember ? '#555' : '';
   document.getElementById('mSchedResponse').classList.add('show');
-  if(!currentMember) setTimeout(() => nameInput.focus(), 120);
+}
+
+function renderRespChildChips(myChildren, selectedId) {
+  const el = document.getElementById('respChildChips');
+  if(!el) return;
+  el.innerHTML = myChildren.map(c => {
+    const existing = schedResp.find(r => r.memberName === c.name);
+    const done = !!existing;
+    const isSel = selectedId === c.id;
+    return `<button type="button" onclick="selectRespChild('${c.id}','${esc(c.name)}')"
+      style="padding:8px 16px;border-radius:20px;border:2px solid;font-size:.88rem;font-weight:700;cursor:pointer;
+      background:${isSel?'var(--primary)':'#fff'};color:${isSel?'#fff':'var(--sub)'};
+      border-color:${isSel?'var(--primary)':'var(--border)'}">
+      ${esc(c.name)}${done?' <span style=\'font-size:.8rem\'>✓</span>':''}
+    </button>`;
+  }).join('');
+}
+
+function selectRespChild(childId, childName) {
+  respChildId = childId;
+  const myChildren = currentMember
+    ? children.filter(c => c.parentId === currentMember.id)
+    : [];
+  renderRespChildChips(myChildren, childId);
+  // Reset answers then load existing
+  respAnswers = {};
+  document.querySelectorAll('.ans-btn').forEach(b => b.className = 'ans-btn');
+  document.getElementById('iRespComment').value = '';
+  loadExistingAnswers(childName);
+  // Show/hide edit hint
+  const existing = schedResp.find(r => r.memberName === childName);
+  document.getElementById('respEditHint').style.display = existing ? 'block' : 'none';
 }
 
 function onRespNameInput(name) {
   loadExistingAnswers(name);
+  const existing = schedResp.find(r => r.memberName === name);
+  const hintName = document.getElementById('respEditHintName');
+  if(hintName) hintName.style.display = existing ? 'block' : 'none';
 }
 
 function loadExistingAnswers(name) {
   const existing = schedResp.find(r => r.memberName === name);
-  const hint = document.getElementById('respEditHint');
-  hint.style.display = existing ? 'block' : 'none';
 
   // Reset all buttons
   document.querySelectorAll('.ans-btn').forEach(b => b.className = 'ans-btn');
@@ -1734,9 +1872,16 @@ function selAns(btn) {
 }
 
 async function saveResponse() {
-  const name = document.getElementById('iRespName').value.trim();
-  if(!name) { alert('お名前を入力してください'); return; }
-  localStorage.setItem('schedRespName', name);
+  let name;
+  if(respChildId) {
+    const child = children.find(c => c.id === respChildId);
+    if(!child) { alert('お子様を選択してください'); return; }
+    name = child.name;
+  } else {
+    name = document.getElementById('iRespName').value.trim();
+    if(!name) { alert('お名前を入力してください'); return; }
+    localStorage.setItem('schedRespName', name);
+  }
 
   const existing = schedResp.find(r=>r.memberName===name);
   const comment = document.getElementById('iRespComment').value.trim();
@@ -1928,8 +2073,8 @@ function renderScriptSettings() {
 function openScriptEdit(id) {
   editScriptId = id || null;
   const s = id ? scripts.find(sc=>sc.id===id) : null;
-  editDirNames = s ? [...(s.directorNames||[])] : [];
-  editActNames = s ? [...(s.actorNames||[])]    : [];
+  editDirNames = s ? [...(s.dirNames||s.directorNames||[])] : [];
+  editActNames = s ? [...(s.actNames||s.actorNames||[])]    : [];
   document.getElementById('mScriptTitle').textContent = id ? '場面を編集' : '場面を追加';
   document.getElementById('iScriptName').value = s?.name || '';
   document.getElementById('mScriptDelRow').style.display = id ? 'block' : 'none';
@@ -1946,11 +2091,14 @@ function renderScriptChips() {
 function renderChipGroup(elId, selected, fn) {
   const el = document.getElementById(elId);
   if(!el) return;
-  if(members.length === 0) {
-    el.innerHTML = '<div style="font-size:.82rem;color:var(--sub)">先にメンバーを登録してください</div>';
+  const isAct = elId === 'scriptActChips';
+  const list  = isAct ? children : members;
+  const emptyMsg = isAct ? '先に子役者を登録してください' : '先に保護者を登録してください';
+  if(list.length === 0) {
+    el.innerHTML = `<div style="font-size:.82rem;color:var(--sub)">${emptyMsg}</div>`;
     return;
   }
-  el.innerHTML = members.map(m => {
+  el.innerHTML = list.map(m => {
     const sel = selected.includes(m.name);
     return `<button type="button" onclick="${fn}('${esc(m.name)}')"
       style="padding:5px 14px;border-radius:20px;border:1.5px solid;font-size:.84rem;font-weight:600;cursor:pointer;
@@ -1973,7 +2121,7 @@ function toggleAct(name) {
 async function saveScript() {
   const name = document.getElementById('iScriptName').value.trim();
   if(!name) { alert('場面名を入力してください'); return; }
-  const data = { name, directorNames: editDirNames, actorNames: editActNames };
+  const data = { name, dirNames: editDirNames, actNames: editActNames };
   closeModal('mScriptEdit');
   if(editScriptId) {
     await db.collection('scripts').doc(editScriptId).update(data);
