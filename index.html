@@ -456,10 +456,6 @@ input,select{font-family:inherit;font-size:inherit;}
         <div class="hdr-member-av" id="hdrMemberAv"></div>
         <span id="hdrMemberName"></span>
       </button>
-      <button class="hdr-add-perf" id="btnAddPerf" onclick="openAddPerf()">＋ 公演</button>
-    </div>
-    <div class="perf-tabs" id="perfTabs">
-      <div class="perf-tab-empty">公演がありません</div>
     </div>
   </div>
 
@@ -492,28 +488,21 @@ input,select{font-family:inherit;font-size:inherit;}
         <button class="ftab" onclick="setFilter('okichike',this)">置きチケ</button>
       </div>
       <div class="card" id="ticketList">
-        <div class="empty"><div class="empty-ic">🎫</div><div>公演を選択してください</div></div>
+
       </div>
     </div>
 
     <!-- View: 受付 -->
     <div id="vReception" class="view">
-      <select class="finput" id="recPerfSel" onchange="onRecPerfChange()" style="margin-bottom:12px;font-size:.95rem;">
-        <option value="">-- 公演を選択 --</option>
-      </select>
       <div id="receptionContent">
-        <div class="empty"><div class="empty-ic">🚪</div><div>公演を選択してください</div></div>
+        <div class="empty"><div class="empty-ic">🚪</div><div>読み込み中...</div></div>
       </div>
     </div>
 
     <!-- View: 集計 -->
     <div id="vSum" class="view">
-      <div class="sum-scope">
-        <button class="scope-btn act" id="scopePerf" onclick="setSumScope('perf')">この公演</button>
-        <button class="scope-btn" id="scopeAll" onclick="setSumScope('all')">全公演合計</button>
-      </div>
       <div id="sumContent">
-        <div class="empty"><div class="empty-ic">📊</div><div>公演を選択してください</div></div>
+        <div class="empty"><div class="empty-ic">📊</div><div>読み込み中...</div></div>
       </div>
     </div>
 
@@ -533,11 +522,9 @@ input,select{font-family:inherit;font-size:inherit;}
 
     <!-- View: 設定 -->
     <div id="vSettings" class="view">
-      <div class="sec-lbl">脚本マスタ</div>
+      <div class="sec-lbl">場面マスタ</div>
       <div class="card" id="scriptListEl"></div>
 
-      <div class="sec-lbl">公演一覧</div>
-      <div class="card" id="perfListEl"></div>
 
       <div class="sec-lbl">メンバー</div>
       <div class="card" id="memberListEl"></div>
@@ -615,43 +602,6 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
-<!-- 公演追加/編集 -->
-<div class="moverlay" id="mPerf">
-  <div class="modal">
-    <div class="modal-title" id="mPerfTitle">公演を追加</div>
-    <div class="fg">
-      <label class="flabel">公演名</label>
-      <input class="finput" id="iPerfName" type="text" placeholder="例：メゾン・ドゥ・ココル１">
-    </div>
-    <div class="fg">
-      <label class="flabel">略称（タブに表示）</label>
-      <input class="finput" id="iPerfShort" type="text" placeholder="例：S1、夜の部" maxlength="8">
-    </div>
-    <div class="fg">
-      <label class="flabel">日付</label>
-      <input class="finput" id="iPerfDate" type="date">
-    </div>
-    <div class="fg">
-      <label class="flabel">時間</label>
-      <input class="finput" id="iPerfTime" type="time">
-    </div>
-    <div class="fg">
-      <label class="flabel">会場</label>
-      <input class="finput" id="iPerfVenue" type="text" placeholder="会場名">
-    </div>
-    <div class="fg">
-      <label class="flabel">定員（任意）</label>
-      <input class="finput" id="iPerfCap" type="number" placeholder="例：100">
-    </div>
-    <div class="frow">
-      <button class="btn btn-s" style="flex:1" onclick="closeModal('mPerf')">キャンセル</button>
-      <button class="btn btn-p" style="flex:1" onclick="savePerf()">保存</button>
-    </div>
-    <div id="mPerfDelRow" style="margin-top:10px;display:none">
-      <button class="btn btn-d btn-blk" onclick="deletePerf()">この公演を削除</button>
-    </div>
-  </div>
-</div>
 
 <!-- 担当者追加 -->
 <div class="moverlay" id="mMember">
@@ -760,13 +710,13 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
-<!-- 脚本 追加/編集 -->
+<!-- 場面 追加/編集 -->
 <div class="moverlay" id="mScriptEdit">
   <div class="modal">
-    <div class="modal-title" id="mScriptTitle">脚本を追加</div>
+    <div class="modal-title" id="mScriptTitle">場面を追加</div>
     <div class="fg">
-      <label class="flabel">脚本名</label>
-      <input class="finput" id="iScriptName" type="text" placeholder="例：三人姉妹" autocomplete="off">
+      <label class="flabel">場面名</label>
+      <input class="finput" id="iScriptName" type="text" placeholder="例：第一場" autocomplete="off">
     </div>
     <div class="fg">
       <label class="flabel">🎬 演出（複数選択可）</label>
@@ -781,7 +731,7 @@ input,select{font-family:inherit;font-size:inherit;}
       <button class="btn btn-p" style="flex:1" onclick="saveScript()">保存</button>
     </div>
     <div id="mScriptDelRow" style="margin-top:10px;display:none">
-      <button class="btn btn-d btn-blk" onclick="deleteScript()">この脚本を削除</button>
+      <button class="btn btn-d btn-blk" onclick="deleteScript()">この場面を削除</button>
     </div>
   </div>
 </div>
@@ -806,10 +756,10 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
-<!-- 脚本選択モーダル（稽古日決定） -->
+<!-- 場面選択モーダル（稽古日決定） -->
 <div class="moverlay" id="mScriptSelect" style="z-index:310">
   <div class="modal">
-    <div class="modal-title">📜 稽古する脚本を選択</div>
+    <div class="modal-title">📜 稽古する場面を選択</div>
     <div id="mScriptSelectLabel" style="text-align:center;font-size:.85rem;color:var(--sub);margin-bottom:14px;line-height:1.5"></div>
     <div id="scriptSelectChips" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px"></div>
     <div style="font-size:.78rem;color:var(--sub);margin-bottom:12px">※ 複数選択可。選択なしの場合は全体稽古として登録します</div>
@@ -864,22 +814,15 @@ const db = firebase.firestore();
 db.enablePersistence().catch(()=>{});
 
 // ==================== STATE ====================
-let perfId    = null;   // 選択中の公演ID
-let perfs     = [];     // 公演一覧
 let members   = [];     // 担当者一覧
-let tickets   = [];     // 選択公演のチケット
-let allTickets = [];    // 全公演のチケット（集計用）
+let tickets   = [];     // チケット一覧
 let filter    = 'all';  // チケットフィルター
 let curType     = 'maeure'; // 新規追加の種別
 let ticketCount = 1;
-let editPerfId = null;  // 編集中の公演ID
 let detailId  = null;   // 詳細表示中のチケットID
-let sumScope  = 'perf'; // 集計スコープ
 
-let unsubPerfs   = null;
 let unsubMembers = null;
 let unsubTickets = null;
-let unsubAll     = null;
 
 // ==================== INIT ====================
 // ==================== CURRENT MEMBER ====================
@@ -934,12 +877,9 @@ function enterApp() {
 
 function updateAdminUI() {
   const admin = canAdmin();
-  // ヘッダー：＋公演
-  document.getElementById('btnAddPerf').style.display = admin ? '' : 'none';
   // 設定タブ再描画（管理者トグル含む）
   renderVenueSettings();
   renderMemberSettings();
-  renderPerfSettings();
   renderScriptSettings();
   // 日程リスト再描画（稽古日を決めるボタン）
   renderSchedList();
@@ -962,9 +902,9 @@ function updateHdrMember() {
 
 window.addEventListener('DOMContentLoaded', () => {
   loadCurrentMember();
-  subscribePerfs();
   subscribeMembers();
-  subscribeAllTickets();
+  subscribeTickets();
+  subscribeRecData();
   subscribeSchedules();
   subscribeScripts();
   subscribeVenues();
@@ -982,24 +922,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==================== SUBSCRIPTIONS ====================
-function subscribePerfs() {
-  if(unsubPerfs) unsubPerfs();
-  unsubPerfs = db.collection('performances').orderBy('createdAt').onSnapshot(snap => {
-    perfs = snap.docs.map(d => ({id:d.id, ...d.data()}));
-    renderPerfSel();
-    renderRecPerfSel();
-    renderPerfSettings();
-    hideLoading();
-    // ホーム画面制御：メンバー未選択なら表示、選択済みならアプリ表示
-    if(currentMember) {
-      document.getElementById('homeScreen').classList.add('hidden');
-      updateHdrMember();
-    } else {
-      showHomeScreen();
-    }
-  }, () => { hideLoading(); showHomeScreen(); });
-}
-
 function subscribeMembers() {
   if(unsubMembers) unsubMembers();
   unsubMembers = db.collection('members').onSnapshot(snap => {
@@ -1011,28 +933,27 @@ function subscribeMembers() {
     });
     renderMemberSel();
     renderMemberSettings();
-    // ホーム画面が表示中ならグリッドも更新
+    hideLoading();
+    // ホーム画面制御
+    if(currentMember) {
+      document.getElementById('homeScreen').classList.add('hidden');
+      updateHdrMember();
+      updateAdminUI();
+    } else {
+      showHomeScreen();
+    }
     if(!document.getElementById('homeScreen').classList.contains('hidden')) {
       renderHomeGrid();
     }
-  });
+  }, () => { hideLoading(); showHomeScreen(); });
 }
 
-function subscribeTickets(pid) {
+function subscribeTickets() {
   if(unsubTickets) { unsubTickets(); unsubTickets = null; }
-  if(!pid) { tickets = []; renderAll(); return; }
-  unsubTickets = db.collection('tickets').where('perfId','==',pid).onSnapshot(snap => {
+  unsubTickets = db.collection('tickets').onSnapshot(snap => {
     tickets = snap.docs.map(d => ({id:d.id, ...d.data()}))
       .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
     renderAll();
-  });
-}
-
-function subscribeAllTickets() {
-  if(unsubAll) unsubAll();
-  unsubAll = db.collection('tickets').onSnapshot(snap => {
-    allTickets = snap.docs.map(d => ({id:d.id, ...d.data()}));
-    if(sumScope === 'all') renderSummary();
   });
 }
 
@@ -1048,27 +969,6 @@ function renderAll() {
   renderSummary();
 }
 
-// ==================== PERF SELECT ====================
-function renderPerfSel() {
-  const el = document.getElementById('perfTabs');
-  if(perfs.length === 0) {
-    el.innerHTML = '<div class="perf-tab-empty">公演がありません</div>';
-    return;
-  }
-  el.innerHTML = perfs.map(p => {
-    const label = p.short || (p.name.length > 8 ? p.name.slice(0,8)+'…' : p.name);
-    return `<button class="perf-tab${perfId===p.id?' act':''}" onclick="selectPerf('${p.id}')">${esc(label)}</button>`;
-  }).join('');
-}
-
-function selectPerf(id) {
-  perfId = id;
-  renderPerfSel();
-  subscribeTickets(perfId);
-}
-
-function onPerfChange() {} // 後方互換のため残す
-
 // ==================== STATS ====================
 function cnt(t) { return t.count||1; }
 
@@ -1078,19 +978,8 @@ function renderStats() {
   document.getElementById('sTotal').textContent    = total;
   document.getElementById('sMaeure').textContent   = sum(tickets.filter(t=>t.type==='maeure'));
   document.getElementById('sOki').textContent      = sum(tickets.filter(t=>t.type==='okichike'));
-  // 残席
-  const perf = perfs.find(p=>p.id===perfId);
-  const cap  = perf?.capacity;
   const remainCard = document.getElementById('sRemainCard');
-  const remainEl   = document.getElementById('sRemain');
-  if(cap) {
-    const remain = cap - total;
-    remainCard.style.display = '';
-    remainEl.textContent = remain;
-    remainEl.style.color = remain <= 0 ? '#c62828' : remain <= 10 ? '#e65100' : '#2e7d32';
-  } else {
-    remainCard.style.display = 'none';
-  }
+  if(remainCard) remainCard.style.display = 'none';
 }
 
 // ==================== TICKETS VIEW ====================
@@ -1103,7 +992,6 @@ function setFilter(f, el) {
 
 function renderTickets() {
   const el = document.getElementById('ticketList');
-  if(!perfId) { el.innerHTML = empty('🎫','公演を選択してください'); return; }
   let list = tickets;
   if(filter !== 'all') list = tickets.filter(t=>t.type===filter);
   else                 list = tickets;
@@ -1129,7 +1017,6 @@ function renderTickets() {
 // ==================== OKI VIEW ====================
 function renderOki() {
   const el = document.getElementById('okiList');
-  if(!perfId) { el.innerHTML = empty('📋','公演を選択してください'); return; }
   const okis = tickets.filter(t=>t.type==='okichike' && t.status!=='cancelled');
   if(okis.length === 0) { el.innerHTML = empty('📋','置きチケはありません'); return; }
 
@@ -1161,21 +1048,9 @@ function renderOki() {
 }
 
 // ==================== SUMMARY VIEW ====================
-function setSumScope(s) {
-  sumScope = s;
-  document.getElementById('scopePerf').classList.toggle('act', s==='perf');
-  document.getElementById('scopeAll').classList.toggle('act',  s==='all');
-  renderSummary();
-}
-
 function renderSummary() {
   const el = document.getElementById('sumContent');
-  const src = sumScope === 'all' ? allTickets : tickets;
-
-  if(sumScope === 'perf' && !perfId) {
-    el.innerHTML = empty('📊','公演を選択してください'); return;
-  }
-  const active = src;
+  const active = tickets;
   if(active.length === 0) { el.innerHTML = empty('📊','データがありません'); return; }
 
   // Per-member stats
@@ -1231,28 +1106,6 @@ function renderSummary() {
       </div>
     </div>`;
 
-  // 公演ごとの内訳（全公演スコープ時）
-  let perfBreakdown = '';
-  if(sumScope === 'all' && perfs.length > 0) {
-    perfBreakdown = `<div class="sec-lbl" style="margin-top:16px">公演別内訳</div>
-    <div class="card">
-      ${perfs.map(p => {
-        const pt = allTickets.filter(t=>t.perfId===p.id && t.status!=='cancelled');
-        const pm = pt.filter(t=>t.type==='maeure').reduce((s,t)=>s+cnt(t),0);
-        const po = pt.filter(t=>t.type==='okichike').reduce((s,t)=>s+cnt(t),0);
-        const total = pt.reduce((s,t)=>s+cnt(t),0);
-        return `<div class="sum-row">
-          <div class="sum-name" style="font-size:.88rem">${esc(p.name)}</div>
-          <div class="sum-cols">
-            <div class="scol"><div class="scol-n" style="color:var(--maeure)">${pm||'—'}</div></div>
-            <div class="scol"><div class="scol-n" style="color:var(--oki)">${po||'—'}</div></div>
-            <div class="scol"><div class="scol-n" style="font-weight:800">${total}</div></div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }
-
   el.innerHTML = `
     <div class="card">
       <div class="card-title">メンバー別集計</div>
@@ -1260,32 +1113,10 @@ function renderSummary() {
       ${memberRows}
     </div>
     ${totalRow}
-    ${perfBreakdown}
   `;
 }
 
 // ==================== SETTINGS ====================
-function renderPerfSettings() {
-  const el = document.getElementById('perfListEl');
-  const admin = canAdmin();
-  if(perfs.length === 0) {
-    el.innerHTML = `<div style="color:var(--sub);font-size:.88rem;padding:6px 0">公演がありません</div>`
-      + (admin ? `<button class="btn btn-s btn-blk" onclick="openAddPerf()">＋ 公演を追加</button>` : '');
-    return;
-  }
-  el.innerHTML = perfs.map(p => `
-    <div class="sitem">
-      <div class="sitem-info">
-        <div class="sitem-name">${esc(p.name)}</div>
-        <div class="sitem-sub">${p.date||''}${p.time?' '+p.time:''} ${p.venue?'/ '+p.venue:''}</div>
-      </div>
-      <div class="sitem-acts">
-        ${admin ? `<button class="btn btn-s btn-sm" onclick="editPerf('${p.id}')">編集</button>` : ''}
-      </div>
-    </div>
-  `).join('') + (admin ? `<button class="btn btn-s btn-blk" onclick="openAddPerf()">＋ 公演を追加</button>` : '');
-}
-
 function renderMemberSettings() {
   const el = document.getElementById('memberListEl');
   if(members.length === 0) {
@@ -1333,13 +1164,12 @@ function switchTab(tab, el) {
   document.getElementById('v'+tab).classList.add('act');
   el.classList.add('act');
   document.getElementById('fab').style.display = tab === 'Tickets' ? 'flex' : 'none';
-  if(tab === 'Reception') { recSearch = ''; renderRecPerfSel(); renderReception(); }
+  if(tab === 'Reception') { recSearch = ''; renderReception(); }
   document.getElementById('content').scrollTop = 0;
 }
 
 // ==================== TICKET MODAL ====================
 function openAddTicket() {
-  if(!perfId) { alert('公演を選択してください'); return; }
   curType = 'maeure';
   updatePills();
   document.getElementById('buyerLabel').textContent = '購入者名（任意）';
@@ -1385,63 +1215,34 @@ async function saveTicket() {
   if(!memberId) { alert('メンバーを選択してください'); return; }
   closeModal('mAddTicket');
   await db.collection('tickets').add({
-    perfId, memberId, buyerName: buyer||'', count, type: curType,
+    memberId, buyerName: buyer||'', count, type: curType,
     status: 'active', note: note||'',
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
 }
 
 // ==================== RECEPTION VIEW ====================
-let recPerfId = null;
-let recTickets = [];
 let recData = {};          // { maeureEntered: N }
-let unsubRecTickets = null;
 let unsubRecData = null;
 
-function subscribeRecTickets(pid) {
-  if(unsubRecTickets) { unsubRecTickets(); unsubRecTickets = null; }
-  if(unsubRecData)    { unsubRecData();    unsubRecData    = null; }
-  if(!pid) { recTickets = []; recData = {}; renderReception(); return; }
-  unsubRecTickets = db.collection('tickets').where('perfId','==',pid).onSnapshot(snap => {
-    recTickets = snap.docs.map(d => ({id:d.id,...d.data()}));
-    renderReception();
-  });
-  unsubRecData = db.collection('reception').doc(pid).onSnapshot(snap => {
+function subscribeRecData() {
+  if(unsubRecData) { unsubRecData(); unsubRecData = null; }
+  unsubRecData = db.collection('reception').doc('main').onSnapshot(snap => {
     recData = snap.exists ? snap.data() : {};
     renderReception();
   });
 }
 
-function onRecPerfChange() {
-  recPerfId = document.getElementById('recPerfSel').value || null;
-  subscribeRecTickets(recPerfId);
-}
-
-function renderRecPerfSel() {
-  const sel = document.getElementById('recPerfSel');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">-- 公演を選択 --</option>';
-  perfs.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.name + (p.date ? ` (${p.date}${p.time?' '+p.time:''})` : '');
-    sel.appendChild(opt);
-  });
-  if(cur && perfs.find(p=>p.id===cur)) sel.value = cur;
-}
-
 function renderReception() {
   const el = document.getElementById('receptionContent');
-  if(!recPerfId) { el.innerHTML = empty('🚪','公演を選択してください'); return; }
-
   // 前売り
-  const maeureTotal   = recTickets.filter(t=>t.type==='maeure').reduce((s,t)=>s+cnt(t),0);
+  const maeureTotal   = tickets.filter(t=>t.type==='maeure' && t.status!=='cancelled').reduce((s,t)=>s+cnt(t),0);
   const maeureEntered = recData.maeureEntered || 0;
   const tojitsuEntered  = recData.tojitsuEntered  || 0;
   const shoutaiEntered  = recData.shoutaiEntered  || 0;
 
   // 置きチケ
-  const okis = recTickets.filter(t=>t.type==='okichike');
+  const okis = tickets.filter(t=>t.type==='okichike');
   const okiSorted = [...okis].sort((a,b)=>{
     if(a.entered && !b.entered) return 1;
     if(!a.entered && b.entered) return -1;
@@ -1513,7 +1314,7 @@ async function changeMaeure(delta) {
   const el = document.getElementById('cntMaeure');
   if(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
   if(navigator.vibrate) navigator.vibrate(30);
-  await db.collection('reception').doc(recPerfId).set({ maeureEntered: next }, { merge: true });
+  await db.collection('reception').doc('main').set({ maeureEntered: next }, { merge: true });
 }
 
 async function changeShoutai(delta) {
@@ -1525,7 +1326,7 @@ async function changeShoutai(delta) {
   const el = document.getElementById('cntShoutai');
   if(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
   if(navigator.vibrate) navigator.vibrate(30);
-  await db.collection('reception').doc(recPerfId).set({ shoutaiEntered: next }, { merge: true });
+  await db.collection('reception').doc('main').set({ shoutaiEntered: next }, { merge: true });
 }
 
 async function changeTojitsu(delta) {
@@ -1537,7 +1338,7 @@ async function changeTojitsu(delta) {
   const el = document.getElementById('cntTojitsu');
   if(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
   if(navigator.vibrate) navigator.vibrate(30);
-  await db.collection('reception').doc(recPerfId).set({ tojitsuEntered: next }, { merge: true });
+  await db.collection('reception').doc('main').set({ tojitsuEntered: next }, { merge: true });
 }
 
 async function toggleOkiEntered(id, cur) {
@@ -1556,7 +1357,6 @@ function openDetail(id) {
   const t = tickets.find(t=>t.id===id);
   if(!t) return;
   const mn = members.find(m=>m.id===t.memberId)?.name || '（未設定）';
-  const perf = perfs.find(p=>p.id===t.perfId);
   const cancelled = t.status==='cancelled';
   document.getElementById('detailContent').innerHTML = `
     <div style="text-align:center;padding:8px 0 14px">
@@ -1571,10 +1371,7 @@ function openDetail(id) {
       <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
         <span style="color:var(--sub)">種別</span><span style="font-weight:600">${typeName(t.type)}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--sub)">公演</span><span style="font-weight:600">${esc(perf?.name||'不明')}</span>
-      </div>
-      ${t.note?`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+${t.note?`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
         <span style="color:var(--sub)">メモ</span><span style="font-weight:600">${esc(t.note)}</span>
       </div>`:''}
       <div style="display:flex;justify-content:space-between;padding:7px 0">
@@ -1610,63 +1407,6 @@ async function toggleCancel() {
   if(!confirm('このチケットを削除しますか？\nこの操作は元に戻せません。')) return;
   closeModal('mDetail');
   await db.collection('tickets').doc(detailId).delete();
-}
-
-// ==================== PERF MODAL ====================
-function openAddPerf() {
-  editPerfId = null;
-  document.getElementById('mPerfTitle').textContent = '公演を追加';
-  document.getElementById('iPerfName').value  = '';
-  document.getElementById('iPerfShort').value = '';
-  document.getElementById('iPerfDate').value  = '';
-  document.getElementById('iPerfTime').value  = '';
-  document.getElementById('iPerfVenue').value = '';
-  document.getElementById('iPerfCap').value   = '';
-  document.getElementById('mPerfDelRow').style.display = 'none';
-  document.getElementById('mPerf').classList.add('show');
-}
-
-function editPerf(id) {
-  const p = perfs.find(p=>p.id===id);
-  if(!p) return;
-  editPerfId = id;
-  document.getElementById('mPerfTitle').textContent = '公演を編集';
-  document.getElementById('iPerfName').value  = p.name||'';
-  document.getElementById('iPerfShort').value = p.short||'';
-  document.getElementById('iPerfDate').value  = p.date||'';
-  document.getElementById('iPerfTime').value  = p.time||'';
-  document.getElementById('iPerfVenue').value = p.venue||'';
-  document.getElementById('iPerfCap').value   = p.capacity||'';
-  document.getElementById('mPerfDelRow').style.display = 'block';
-  document.getElementById('mPerf').classList.add('show');
-}
-
-async function savePerf() {
-  const name = document.getElementById('iPerfName').value.trim();
-  if(!name) { alert('公演名を入力してください'); return; }
-  const data = {
-    name,
-    short:    document.getElementById('iPerfShort').value.trim(),
-    date:     document.getElementById('iPerfDate').value,
-    time:     document.getElementById('iPerfTime').value,
-    venue:    document.getElementById('iPerfVenue').value.trim(),
-    capacity: parseInt(document.getElementById('iPerfCap').value)||null
-  };
-  closeModal('mPerf');
-  if(editPerfId) {
-    await db.collection('performances').doc(editPerfId).update(data);
-  } else {
-    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-    await db.collection('performances').add(data);
-  }
-}
-
-async function deletePerf() {
-  if(!editPerfId) return;
-  const p = perfs.find(p=>p.id===editPerfId);
-  if(!confirm(`「${p?.name||'この公演'}」を削除しますか？\nチケットデータは残ります。`)) return;
-  closeModal('mPerf');
-  await db.collection('performances').doc(editPerfId).delete();
 }
 
 // ==================== MEMBER MODAL ====================
@@ -2087,7 +1827,7 @@ async function deleteSched() {
   await db.collection('schedules').doc(curSchedId).delete();
 }
 
-// ==================== SCRIPTS (脚本マスタ) ====================
+// ==================== SCRIPTS (場面マスタ) ====================
 // ==================== VENUES ====================
 let venues      = [];
 let unsubVenues = null;
@@ -2167,8 +1907,8 @@ function renderScriptSettings() {
   if(!el) return;
   const admin = canAdmin();
   if(scripts.length === 0) {
-    el.innerHTML = `<div style="color:var(--sub);font-size:.88rem;padding:6px 0">脚本がありません</div>`
-      + (admin ? `<button class="btn btn-s btn-blk" onclick="openScriptEdit()">＋ 脚本を追加</button>` : '');
+    el.innerHTML = `<div style="color:var(--sub);font-size:.88rem;padding:6px 0">場面がありません</div>`
+      + (admin ? `<button class="btn btn-s btn-blk" onclick="openScriptEdit()">＋ 場面を追加</button>` : '');
     return;
   }
   el.innerHTML = scripts.map(s => `
@@ -2182,7 +1922,7 @@ function renderScriptSettings() {
         ${admin ? `<button class="btn btn-s btn-sm" onclick="openScriptEdit('${s.id}')">編集</button>` : ''}
       </div>
     </div>`).join('')
-    + (admin ? `<button class="btn btn-s btn-blk" onclick="openScriptEdit()">＋ 脚本を追加</button>` : '');
+    + (admin ? `<button class="btn btn-s btn-blk" onclick="openScriptEdit()">＋ 場面を追加</button>` : '');
 }
 
 function openScriptEdit(id) {
@@ -2190,7 +1930,7 @@ function openScriptEdit(id) {
   const s = id ? scripts.find(sc=>sc.id===id) : null;
   editDirNames = s ? [...(s.directorNames||[])] : [];
   editActNames = s ? [...(s.actorNames||[])]    : [];
-  document.getElementById('mScriptTitle').textContent = id ? '脚本を編集' : '脚本を追加';
+  document.getElementById('mScriptTitle').textContent = id ? '場面を編集' : '場面を追加';
   document.getElementById('iScriptName').value = s?.name || '';
   document.getElementById('mScriptDelRow').style.display = id ? 'block' : 'none';
   renderScriptChips();
@@ -2232,7 +1972,7 @@ function toggleAct(name) {
 
 async function saveScript() {
   const name = document.getElementById('iScriptName').value.trim();
-  if(!name) { alert('脚本名を入力してください'); return; }
+  if(!name) { alert('場面名を入力してください'); return; }
   const data = { name, directorNames: editDirNames, actorNames: editActNames };
   closeModal('mScriptEdit');
   if(editScriptId) {
@@ -2245,7 +1985,7 @@ async function saveScript() {
 
 async function deleteScript() {
   const s = scripts.find(sc=>sc.id===editScriptId);
-  if(!confirm(`「${s?.name||'この脚本'}」を削除しますか？`)) return;
+  if(!confirm(`「${s?.name||'この場面'}」を削除しますか？`)) return;
   closeModal('mScriptEdit');
   await db.collection('scripts').doc(editScriptId).delete();
 }
@@ -2489,7 +2229,7 @@ function _openScriptSelectModal() {
 function renderScriptSelectChips() {
   const el = document.getElementById('scriptSelectChips');
   if(scripts.length === 0) {
-    el.innerHTML = '<div style="color:var(--sub);font-size:.85rem">脚本がありません。全体稽古として登録します。</div>';
+    el.innerHTML = '<div style="color:var(--sub);font-size:.85rem">場面がありません。全体稽古として登録します。</div>';
     return;
   }
   el.innerHTML = scripts.map(sc => {
