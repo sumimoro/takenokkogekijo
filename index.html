@@ -6,7 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="たけのっ子劇場">
-<meta name="theme-color" content="#bf4500">
+<meta name="theme-color" content="#d9804a">
+<link rel="manifest" href="manifest.json">
 <title>たけのっ子劇場</title>
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" href="icon.png">
@@ -540,17 +541,17 @@ input,select{font-family:inherit;font-size:inherit;}
 
   <!-- Tab bar -->
   <div class="tabbar">
+    <button class="tbbtn" id="tb-schedule" onclick="switchTab('Schedule',this)">
+      <span class="ti">📅</span>日程
+    </button>
     <button class="tbbtn act" id="tb-tickets" onclick="switchTab('Tickets',this)">
       <span class="ti">🎫</span>チケット
-    </button>
-    <button class="tbbtn" id="tb-reception" onclick="switchTab('Reception',this)">
-      <span class="ti">🚪</span>受付
     </button>
     <button class="tbbtn" id="tb-sum" onclick="switchTab('Sum',this)">
       <span class="ti">📊</span>集計
     </button>
-    <button class="tbbtn" id="tb-schedule" onclick="switchTab('Schedule',this)">
-      <span class="ti">📅</span>日程
+    <button class="tbbtn" id="tb-reception" onclick="switchTab('Reception',this)">
+      <span class="ti">🚪</span>受付
     </button>
     <button class="tbbtn" id="tb-settings" onclick="switchTab('Settings',this)">
       <span class="ti">⚙️</span>設定
