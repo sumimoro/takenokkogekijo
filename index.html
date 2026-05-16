@@ -901,12 +901,12 @@ input,select{font-family:inherit;font-size:inherit;}
 // ==================== FIREBASE ====================
 // TODO: Replace with your Firebase project config
 const firebaseConfig = {
-  apiKey: "AIzaSyCctWINlxnZR28UAMicMZcUjQji8kuLepY",
-  authDomain: "takenoko-gekijo.firebaseapp.com",
-  projectId: "takenoko-gekijo",
-  storageBucket: "takenoko-gekijo.firebasestorage.app",
-  messagingSenderId: "908824788467",
-  appId: "1:908824788467:web:bab88ac51cc4e7bab3e686"
+  apiKey: "AIzaSyDwnXaTAKLMr3-rblC2uC7Jp5IJIRgpssI",
+  authDomain: "geki-chike.firebaseapp.com",
+  projectId: "geki-chike",
+  storageBucket: "geki-chike.firebasestorage.app",
+  messagingSenderId: "1088401009975",
+  appId: "1:1088401009975:web:e491373453ad47708cbeb2"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -1029,7 +1029,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // ==================== SUBSCRIPTIONS ====================
 function subscribeMembers() {
   if(unsubMembers) unsubMembers();
-  unsubMembers = db.collection('members').onSnapshot(snap => {
+  unsubMembers = db.collection('takenoko_members').onSnapshot(snap => {
     members = snap.docs.map(d => ({id:d.id, ...d.data()}));
     members.sort((a,b) => {
       const ao = a.order ?? Infinity, bo = b.order ?? Infinity;
@@ -1055,7 +1055,7 @@ function subscribeMembers() {
 
 function subscribeChildren() {
   if(unsubChildren) unsubChildren();
-  unsubChildren = db.collection('children').onSnapshot(snap => {
+  unsubChildren = db.collection('takenoko_children').onSnapshot(snap => {
     children = snap.docs.map(d => ({id:d.id,...d.data()}));
     children.sort((a,b) => (a.order??Infinity) - (b.order??Infinity));
     renderChildrenSettings();
@@ -1065,7 +1065,7 @@ function subscribeChildren() {
 
 function subscribeTickets() {
   if(unsubTickets) { unsubTickets(); unsubTickets = null; }
-  unsubTickets = db.collection('tickets').onSnapshot(snap => {
+  unsubTickets = db.collection('takenoko_tickets').onSnapshot(snap => {
     tickets = snap.docs.map(d => ({id:d.id, ...d.data()}))
       .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
     renderAll();
@@ -1297,7 +1297,7 @@ async function saveChild() {
   if(!name) { alert('名前を入力してください'); return; }
   const siblingCount = children.filter(c => c.parentId === _addChildParentId).length;
   closeModal('mAddChild');
-  await db.collection('children').add({
+  await db.collection('takenoko_children').add({
     name,
     parentId: _addChildParentId,
     order: siblingCount,
@@ -1307,7 +1307,7 @@ async function saveChild() {
 
 async function deleteChild(id, name) {
   if(!confirm(`「${name}」を削除しますか？`)) return;
-  await db.collection('children').doc(id).delete();
+  await db.collection('takenoko_children').doc(id).delete();
 }
 
 function renderMemberSel() {
@@ -1380,7 +1380,7 @@ async function saveTicket() {
   if(curType === 'okichike' && !buyer) { alert('予約は購入者名を入力してください'); return; }
   if(!memberId) { alert('メンバーを選択してください'); return; }
   closeModal('mAddTicket');
-  await db.collection('tickets').add({
+  await db.collection('takenoko_tickets').add({
     memberId, buyerName: buyer||'', count, type: curType,
     status: 'active', note: note||'',
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1393,7 +1393,7 @@ let unsubRecData = null;
 
 function subscribeRecData() {
   if(unsubRecData) { unsubRecData(); unsubRecData = null; }
-  unsubRecData = db.collection('reception').doc('main').onSnapshot(snap => {
+  unsubRecData = db.collection('takenoko_reception').doc('main').onSnapshot(snap => {
     recData = snap.exists ? snap.data() : {};
     renderReception();
   });
@@ -1480,7 +1480,7 @@ async function changeMaeure(delta) {
   const el = document.getElementById('cntMaeure');
   if(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
   if(navigator.vibrate) navigator.vibrate(30);
-  await db.collection('reception').doc('main').set({ maeureEntered: next }, { merge: true });
+  await db.collection('takenoko_reception').doc('main').set({ maeureEntered: next }, { merge: true });
 }
 
 async function changeShoutai(delta) {
@@ -1492,7 +1492,7 @@ async function changeShoutai(delta) {
   const el = document.getElementById('cntShoutai');
   if(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
   if(navigator.vibrate) navigator.vibrate(30);
-  await db.collection('reception').doc('main').set({ shoutaiEntered: next }, { merge: true });
+  await db.collection('takenoko_reception').doc('main').set({ shoutaiEntered: next }, { merge: true });
 }
 
 async function changeTojitsu(delta) {
@@ -1504,17 +1504,17 @@ async function changeTojitsu(delta) {
   const el = document.getElementById('cntTojitsu');
   if(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
   if(navigator.vibrate) navigator.vibrate(30);
-  await db.collection('reception').doc('main').set({ tojitsuEntered: next }, { merge: true });
+  await db.collection('takenoko_reception').doc('main').set({ tojitsuEntered: next }, { merge: true });
 }
 
 async function toggleOkiEntered(id, cur) {
-  await db.collection('tickets').doc(id).update({ entered: !cur });
+  await db.collection('takenoko_tickets').doc(id).update({ entered: !cur });
 }
 
 // ==================== OKI TOGGLE ====================
 async function toggleArrived(id, cur) {
   const ns = cur === 'arrived' ? 'active' : 'arrived';
-  await db.collection('tickets').doc(id).update({status: ns});
+  await db.collection('takenoko_tickets').doc(id).update({status: ns});
 }
 
 // ==================== TICKET DETAIL ====================
@@ -1565,14 +1565,14 @@ async function toggleSettle() {
     ? '精算済みを取り消しますか？'
     : '精算済みにしますか？\n会計担当への引き渡しが完了した場合のみ実行してください。';
   if(!confirm(msg)) return;
-  await db.collection('tickets').doc(detailId).update({ settled: !t.settled });
+  await db.collection('takenoko_tickets').doc(detailId).update({ settled: !t.settled });
   closeModal('mDetail');
 }
 
 async function toggleCancel() {
   if(!confirm('このチケットを削除しますか？\nこの操作は元に戻せません。')) return;
   closeModal('mDetail');
-  await db.collection('tickets').doc(detailId).delete();
+  await db.collection('takenoko_tickets').doc(detailId).delete();
 }
 
 // ==================== MEMBER MODAL ====================
@@ -1605,9 +1605,9 @@ async function saveMember() {
   if(!name) { alert('名前を入力してください'); return; }
   closeModal('mMember');
   if(editMemberId) {
-    await db.collection('members').doc(editMemberId).update({ name });
+    await db.collection('takenoko_members').doc(editMemberId).update({ name });
   } else {
-    await db.collection('members').add({
+    await db.collection('takenoko_members').add({
       name,
       order: members.length,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1623,12 +1623,12 @@ async function moveMember(id, dir) {
   // Ensure all members have order values, then swap
   const batch = db.batch();
   members.forEach((m, i) => {
-    if(m.order === undefined) batch.update(db.collection('members').doc(m.id), { order: i });
+    if(m.order === undefined) batch.update(db.collection('takenoko_members').doc(m.id), { order: i });
   });
   const aOrd = members[idx].order    ?? idx;
   const bOrd = members[swapIdx].order ?? swapIdx;
-  batch.update(db.collection('members').doc(id),                { order: bOrd });
-  batch.update(db.collection('members').doc(members[swapIdx].id), { order: aOrd });
+  batch.update(db.collection('takenoko_members').doc(id),                { order: bOrd });
+  batch.update(db.collection('takenoko_members').doc(members[swapIdx].id), { order: aOrd });
   await batch.commit();
 }
 
@@ -1636,12 +1636,12 @@ async function deleteMember() {
   const m = members.find(m=>m.id===editMemberId);
   if(!confirm(`「${m?.name||'このメンバー'}」を削除しますか？`)) return;
   closeModal('mMember');
-  await db.collection('members').doc(editMemberId).delete();
+  await db.collection('takenoko_members').doc(editMemberId).delete();
 }
 
 async function delMember(id, name) {
   if(!confirm(`「${name}」を削除しますか？`)) return;
-  await db.collection('members').doc(id).delete();
+  await db.collection('takenoko_members').doc(id).delete();
 }
 
 async function toggleAdmin(id, makeAdmin) {
@@ -1649,7 +1649,7 @@ async function toggleAdmin(id, makeAdmin) {
   if(!m) return;
   const label = makeAdmin ? '管理者にする' : '管理者を解除する';
   if(!confirm(`「${m.name}」を${label}しますか？`)) return;
-  await db.collection('members').doc(id).update({ isAdmin: makeAdmin });
+  await db.collection('takenoko_members').doc(id).update({ isAdmin: makeAdmin });
   // 自分自身の権限が変わった場合は currentMember も更新
   if(currentMember?.id === id) {
     currentMember.isAdmin = makeAdmin;
@@ -1697,7 +1697,7 @@ let unsubSchedResp = null;
 
 function subscribeSchedules() {
   if(unsubScheds) unsubScheds();
-  unsubScheds = db.collection('schedules').orderBy('createdAt','desc').onSnapshot(snap => {
+  unsubScheds = db.collection('takenoko_schedules').orderBy('createdAt','desc').onSnapshot(snap => {
     schedules = snap.docs.map(d => ({id:d.id,...d.data()}));
     renderSchedList();
   }, () => { renderSchedList(); });
@@ -1753,7 +1753,7 @@ function openSchedDetail(id) {
 
 function subscribeSchedResponses(id) {
   if(unsubSchedResp) { unsubSchedResp(); unsubSchedResp = null; }
-  unsubSchedResp = db.collection('scheduleResponses')
+  unsubSchedResp = db.collection('takenoko_scheduleResponses')
     .where('scheduleId','==',id)
     .onSnapshot(snap => {
       schedResp = snap.docs.map(d => ({id:d.id,...d.data()}))
@@ -1970,9 +1970,9 @@ async function saveResponse() {
 
   closeModal('mSchedResponse');
   if(existing) {
-    await db.collection('scheduleResponses').doc(existing.id).set(data);
+    await db.collection('takenoko_scheduleResponses').doc(existing.id).set(data);
   } else {
-    await db.collection('scheduleResponses').add(data);
+    await db.collection('takenoko_scheduleResponses').add(data);
   }
 }
 
@@ -2028,7 +2028,7 @@ async function saveSched() {
   }));
 
   closeModal('mCreateSched');
-  await db.collection('schedules').add({
+  await db.collection('takenoko_schedules').add({
     title,
     description: document.getElementById('iSchedDesc').value.trim(),
     slots,
@@ -2042,9 +2042,9 @@ async function deleteSched() {
   if(!confirm(`「${s?.title||'この日程調整'}」を削除しますか？\n回答データも削除されます。`)) return;
   closeModal('mSchedDetail');
   const batch = db.batch();
-  schedResp.forEach(r => batch.delete(db.collection('scheduleResponses').doc(r.id)));
+  schedResp.forEach(r => batch.delete(db.collection('takenoko_scheduleResponses').doc(r.id)));
   await batch.commit();
-  await db.collection('schedules').doc(curSchedId).delete();
+  await db.collection('takenoko_schedules').doc(curSchedId).delete();
 }
 
 // ==================== SCRIPTS (場面マスタ) ====================
@@ -2054,11 +2054,11 @@ let unsubVenues = null;
 
 function subscribeVenues() {
   if(unsubVenues) unsubVenues();
-  unsubVenues = db.collection('venues').orderBy('order').onSnapshot(snap => {
+  unsubVenues = db.collection('takenoko_venues').orderBy('order').onSnapshot(snap => {
     venues = snap.docs.map(d=>({id:d.id,...d.data()}));
     renderVenueSettings();
   }, () => {
-    db.collection('venues').orderBy('createdAt').get().then(snap => {
+    db.collection('takenoko_venues').orderBy('createdAt').get().then(snap => {
       venues = snap.docs.map(d=>({id:d.id,...d.data()}));
       renderVenueSettings();
     }).catch(()=>{});
@@ -2095,7 +2095,7 @@ async function addVenue() {
   const name = el.value.trim();
   if(!name) return;
   el.value = '';
-  await db.collection('venues').add({
+  await db.collection('takenoko_venues').add({
     name,
     order: venues.length,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2104,7 +2104,7 @@ async function addVenue() {
 
 async function deleteVenue(id, name) {
   if(!confirm(`「${name}」を削除しますか？`)) return;
-  await db.collection('venues').doc(id).delete();
+  await db.collection('takenoko_venues').doc(id).delete();
 }
 
 // ==================== SCRIPTS ====================
@@ -2115,7 +2115,7 @@ let editActNames = [];
 
 function subscribeScripts() {
   if(unsubScripts) unsubScripts();
-  unsubScripts = db.collection('scripts').orderBy('createdAt').onSnapshot(snap => {
+  unsubScripts = db.collection('takenoko_scripts').orderBy('createdAt').onSnapshot(snap => {
     scripts = snap.docs.map(d=>({id:d.id,...d.data()}));
     renderScriptSettings();
   }, ()=>{ renderScriptSettings(); });
@@ -2190,10 +2190,10 @@ async function saveScript() {
   const data = { name, actNames: editActNames };
   closeModal('mScriptEdit');
   if(editScriptId) {
-    await db.collection('scripts').doc(editScriptId).update(data);
+    await db.collection('takenoko_scripts').doc(editScriptId).update(data);
   } else {
     data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-    await db.collection('scripts').add(data);
+    await db.collection('takenoko_scripts').add(data);
   }
 }
 
@@ -2201,7 +2201,7 @@ async function deleteScript() {
   const s = scripts.find(sc=>sc.id===editScriptId);
   if(!confirm(`「${s?.name||'この場面'}」を削除しますか？`)) return;
   closeModal('mScriptEdit');
-  await db.collection('scripts').doc(editScriptId).delete();
+  await db.collection('takenoko_scripts').doc(editScriptId).delete();
 }
 
 // ==================== REHEARSAL PLANNING ====================
@@ -2213,7 +2213,7 @@ let unsubDetailRehearsal = null;
 // ---- decided dates badge in schedule detail ----
 function subscribeDetailRehearsals(schedId) {
   if(unsubDetailRehearsal) { unsubDetailRehearsal(); unsubDetailRehearsal = null; }
-  unsubDetailRehearsal = db.collection('rehearsals')
+  unsubDetailRehearsal = db.collection('takenoko_rehearsals')
     .where('scheduleId','==',schedId)
     .onSnapshot(snap => {
       renderDecidedInDetail(snap.docs.map(d=>({id:d.id,...d.data()})));
@@ -2266,7 +2266,7 @@ function renderRpTabs() {
 
 function subscribeRehearsals(schedId) {
   if(unsubRehearsal) { unsubRehearsal(); unsubRehearsal = null; }
-  unsubRehearsal = db.collection('rehearsals')
+  unsubRehearsal = db.collection('takenoko_rehearsals')
     .where('scheduleId','==',schedId)
     .onSnapshot(snap => {
       rehearsals = snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -2489,7 +2489,7 @@ async function selectVenue(venueName) {
   document.getElementById('mVenueInput').classList.remove('show');
   const venue = venueName || null;
   if(_editingRehearsalId) {
-    await db.collection('rehearsals').doc(_editingRehearsalId).update({ venue });
+    await db.collection('takenoko_rehearsals').doc(_editingRehearsalId).update({ venue });
     _editingRehearsalId = null;
   } else if(_pendingSlotId) {
     // _pendingScripts: [{id, name}] 複数対応
@@ -2497,7 +2497,7 @@ async function selectVenue(venueName) {
     const scriptName = scriptsArr.length > 0 ? scriptsArr.map(s => s.name).join('・') : '全体稽古';
     // 後方互換: 1脚本の場合のみ scriptId を設定
     const scriptId   = scriptsArr.length === 1 ? scriptsArr[0].id : null;
-    await db.collection('rehearsals').add({
+    await db.collection('takenoko_rehearsals').add({
       scheduleId: curSchedId,
       slotId:     _pendingSlotId,
       slotLabel:  _pendingSlotLabel,
@@ -2514,7 +2514,7 @@ async function selectVenue(venueName) {
 
 async function cancelRehearsal(id) {
   if(!confirm('この稽古日の決定を取り消しますか？')) return;
-  await db.collection('rehearsals').doc(id).delete();
+  await db.collection('takenoko_rehearsals').doc(id).delete();
 }
 
 // ---- 時間編集 ----
@@ -2545,7 +2545,7 @@ async function saveRehearsalTime() {
   const datePart = (r.slotLabel || '').match(/^(\d+\/\d+\([^)]+\))/)?.[1] || '';
   const newSlotLabel = newTime ? `${datePart} ${newTime}` : datePart;
   document.getElementById('mTimeInput').classList.remove('show');
-  await db.collection('rehearsals').doc(_editingTimeRehearsalId).update({ slotLabel: newSlotLabel });
+  await db.collection('takenoko_rehearsals').doc(_editingTimeRehearsalId).update({ slotLabel: newSlotLabel });
   _editingTimeRehearsalId = null;
 }
 
@@ -2566,7 +2566,7 @@ let selectedCalDate  = null; // "YYYY-MM-DD"
 
 function subscribeAllRehearsals() {
   if(unsubAllReh) unsubAllReh();
-  unsubAllReh = db.collection('rehearsals').onSnapshot(snap => {
+  unsubAllReh = db.collection('takenoko_rehearsals').onSnapshot(snap => {
     allRehearsals = snap.docs.map(d=>({id:d.id,...d.data()}));
     if(document.getElementById('calView').style.display !== 'none') renderCalendar();
     if(document.getElementById('attView').style.display  !== 'none') renderAttView();
@@ -2575,7 +2575,7 @@ function subscribeAllRehearsals() {
 
 function subscribeAllSchedResponses() {
   if(unsubAllSchedResp) unsubAllSchedResp();
-  unsubAllSchedResp = db.collection('scheduleResponses').onSnapshot(snap => {
+  unsubAllSchedResp = db.collection('takenoko_scheduleResponses').onSnapshot(snap => {
     allSchedResponses = snap.docs.map(d=>({id:d.id,...d.data()}));
     if(document.getElementById('calView').style.display !== 'none') renderCalendar();
     if(document.getElementById('attView').style.display  !== 'none') renderAttView();

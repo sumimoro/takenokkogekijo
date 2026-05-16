@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "takenoko-gekijo",
+    "site": "takenokkogekijo-app",
     "public": ".",
     "ignore": [
       "firebase.json",
