@@ -1,0 +1,4 @@
+.firebase/
+.DS_Store
+.claude/
+firebase-debug.log
