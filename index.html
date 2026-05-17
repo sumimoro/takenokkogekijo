@@ -1997,21 +1997,33 @@ function renderSlotRows() {
     return;
   }
   el.innerHTML = editSlots.map((sl, i) =>
-    `<div class="slot-row">
+    `<div class="slot-row" style="flex-wrap:wrap;gap:4px;">
       <input class="finput" type="date" value="${sl.date}"
-        oninput="editSlots[${i}].date=this.value" style="flex:1.4;">
-      <input class="finput" type="text" value="${esc(sl.timeLabel)}"
-        oninput="editSlots[${i}].timeLabel=this.value"
-        placeholder="20:00〜" style="flex:1;">
+        oninput="editSlots[${i}].date=this.value" style="flex:1.4;min-width:130px;">
+      <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:160px;">
+        <input class="finput" type="time" value="${sl.timeStart||''}"
+          oninput="updateSlotTime(${i},'start',this.value)" style="flex:1;min-width:0;">
+        <span style="color:var(--sub);flex-shrink:0;">〜</span>
+        <input class="finput" type="time" value="${sl.timeEnd||''}"
+          oninput="updateSlotTime(${i},'end',this.value)" style="flex:1;min-width:0;">
+      </div>
       <button type="button" class="btn btn-d btn-sm" style="padding:8px 10px" onclick="removeSlot(${i})">✕</button>
     </div>`
   ).join('');
 }
 
+function updateSlotTime(i, field, val) {
+  if(field === 'start') editSlots[i].timeStart = val;
+  else editSlots[i].timeEnd = val;
+  const s = editSlots[i].timeStart || '';
+  const e = editSlots[i].timeEnd   || '';
+  editSlots[i].timeLabel = s ? (e ? s+'〜'+e : s+'〜') : (e ? '〜'+e : '');
+}
+
 function addSlot() {
   editSlots.push({
     id: 'sl' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
-    date: '', timeLabel: ''
+    date: '', timeLabel: '', timeStart: '', timeEnd: ''
   });
   renderSlotRows();
 }
