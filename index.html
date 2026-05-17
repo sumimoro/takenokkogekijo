@@ -973,6 +973,12 @@ function enterApp() {
   document.getElementById('homeScreen').classList.add('hidden');
   updateHdrMember();
   updateAdminUI();
+  // 最後に開いていたタブを復元
+  const lastTab = localStorage.getItem('takenoko_lastTab');
+  if(lastTab) {
+    const btn = document.getElementById('tb-' + lastTab.toLowerCase());
+    if(btn) switchTab(lastTab, btn);
+  }
 }
 
 function updateAdminUI() {
@@ -1326,6 +1332,7 @@ function switchTab(tab, el) {
   document.querySelectorAll('.tbbtn').forEach(b => b.classList.remove('act'));
   document.getElementById('v'+tab).classList.add('act');
   el.classList.add('act');
+  localStorage.setItem('takenoko_lastTab', tab);
   document.getElementById('fab').style.display = tab === 'Tickets' ? 'flex' : 'none';
   if(tab === 'Reception') { recSearch = ''; renderReception(); }
   document.getElementById('content').scrollTop = 0;
