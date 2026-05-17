@@ -2000,41 +2000,21 @@ function renderSlotRows() {
     `<div class="slot-row" style="flex-wrap:wrap;gap:4px;">
       <input class="finput" type="date" value="${sl.date}"
         oninput="editSlots[${i}].date=this.value" style="flex:1.4;min-width:130px;">
-      <div style="display:flex;align-items:center;gap:3px;flex:1;min-width:190px;">
-        ${timeSelHtml(i,'timeStart')}
-        <span style="color:var(--sub);flex-shrink:0;padding:0 2px;">〜</span>
-        ${timeSelHtml(i,'timeEnd')}
+      <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:160px;">
+        <input class="finput" type="time" value="${sl.timeStart||''}"
+          oninput="updateSlotTime(${i},'start',this.value)" style="flex:1;min-width:0;">
+        <span style="color:var(--sub);flex-shrink:0;">〜</span>
+        <input class="finput" type="time" value="${sl.timeEnd||''}"
+          oninput="updateSlotTime(${i},'end',this.value)" style="flex:1;min-width:0;">
       </div>
       <button type="button" class="btn btn-d btn-sm" style="padding:8px 10px" onclick="removeSlot(${i})">✕</button>
     </div>`
   ).join('');
 }
 
-function timeSelHtml(i, field) {
-  const val = editSlots[i][field] || '';
-  const hh = val ? val.split(':')[0] : '';
-  const mm = val ? val.split(':')[1] : '';
-  const hourOpts = Array.from({length:24}, (_, h) => {
-    const v = String(h).padStart(2,'0');
-    return `<option value="${v}"${hh===v?' selected':''}>${v}</option>`;
-  }).join('');
-  const minOpts = ['00','10','20','30','40','50'].map(m =>
-    `<option value="${m}"${mm===m?' selected':''}>${m}</option>`
-  ).join('');
-  return `<select class="fsel" style="flex:1;min-width:0;padding:6px 2px;font-size:.88rem;"
-      onchange="updateSlotTimePart(${i},'${field}','H',this.value)">
-    <option value="">時</option>${hourOpts}</select
-  ><span style="flex-shrink:0;padding:0 2px;color:var(--sub)">:</span
-  ><select class="fsel" style="flex:1;min-width:0;padding:6px 2px;font-size:.88rem;"
-      onchange="updateSlotTimePart(${i},'${field}','M',this.value)">
-    <option value="">分</option>${minOpts}</select>`;
-}
-
-function updateSlotTimePart(i, field, part, val) {
-  const cur = (editSlots[i][field] || '').split(':');
-  const h = part==='H' ? val : (cur[0]||'');
-  const m = part==='M' ? val : (cur[1]||'');
-  editSlots[i][field] = (h && m) ? `${h}:${m}` : '';
+function updateSlotTime(i, field, val) {
+  if(field === 'start') editSlots[i].timeStart = val;
+  else editSlots[i].timeEnd = val;
   const s = editSlots[i].timeStart || '';
   const e = editSlots[i].timeEnd   || '';
   editSlots[i].timeLabel = s ? (e ? s+'〜'+e : s+'〜') : (e ? '〜'+e : '');
