@@ -89,6 +89,11 @@ input,select{font-family:inherit;font-size:inherit;}
 .hdr-title{font-size:1.05rem;font-weight:700;flex:1;}
 .hdr-add-perf{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);
   color:#fff;border-radius:6px;padding:4px 10px;font-size:.8rem;}
+.hdr-help{background:#fff;border:none;color:var(--primary);border-radius:50%;width:30px;height:30px;font-size:.95rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.help-section{margin-bottom:16px;}
+.help-section h3{font-size:.9rem;font-weight:700;color:var(--primary);margin:0 0 6px;border-bottom:1px solid var(--border);padding-bottom:4px;}
+.help-section ul{margin:0;padding-left:18px;}
+.help-section li{font-size:.83rem;color:#444;margin-bottom:4px;line-height:1.5;}
 .perf-tabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;
   scrollbar-width:none;margin-top:7px;}
 .perf-tabs::-webkit-scrollbar{display:none;}
@@ -453,6 +458,7 @@ input,select{font-family:inherit;font-size:inherit;}
   <div class="hdr">
     <div class="hdr-top">
       <span class="hdr-title">たけのっ子劇場</span>
+      <button class="hdr-help" onclick="openHelp()">？</button>
       <button class="hdr-member" id="hdrMember" onclick="showHomeScreen()" style="display:none">
         <div class="hdr-member-av" id="hdrMemberAv"></div>
         <span id="hdrMemberName"></span>
@@ -894,6 +900,56 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
+<!-- Help Modal -->
+<div class="moverlay" id="mHelp">
+  <div class="modal">
+    <div class="modal-title">📖 操作説明</div>
+    <div class="help-section">
+      <h3>🎫 チケット</h3>
+      <ul>
+        <li>右下の ＋ ボタンでチケットを追加します</li>
+        <li>上部のタブで公演を切り替えられます</li>
+        <li>「すべて」「前売り」「予約」でフィルタできます</li>
+        <li>チケットをタップすると詳細・削除できます（管理者のみ削除可）</li>
+      </ul>
+    </div>
+    <div class="help-section">
+      <h3>🚪 受付</h3>
+      <ul>
+        <li>当日の来場チェックに使います</li>
+        <li>名前をタップして入場済みにマークします</li>
+        <li>入場人数がリアルタイムで集計されます</li>
+      </ul>
+    </div>
+    <div class="help-section">
+      <h3>📊 集計</h3>
+      <ul>
+        <li>公演ごとの販売数・入場数を確認できます</li>
+        <li>前売り・予約・当日の内訳が見られます</li>
+      </ul>
+    </div>
+    <div class="help-section">
+      <h3>📅 日程</h3>
+      <ul>
+        <li>「日程調整」で稽古日程の参加可否を登録します</li>
+        <li>「出欠表」でメンバー全員の参加状況を一覧できます</li>
+        <li>「カレンダー」で月ごとの稽古予定を確認できます</li>
+        <li>稽古日の確定・場所の設定は管理者が行います</li>
+      </ul>
+    </div>
+    <div class="help-section">
+      <h3>⚙️ 設定（管理者のみ）</h3>
+      <ul>
+        <li>メンバーの追加・削除・管理者権限の変更ができます</li>
+        <li>公演（こうえん）の追加・削除ができます</li>
+        <li>稽古場所の登録・管理ができます</li>
+        <li>台本のアップロード・管理ができます</li>
+      </ul>
+    </div>
+    <button class="btn btn-p" style="width:100%;margin-top:4px" onclick="closeHelp()">閉じる</button>
+  </div>
+</div>
+
 <!-- Firebase & Logic -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -928,6 +984,10 @@ let unsubTickets  = null;
 let respChildId   = null; // 回答選択中のこどもID
 
 // ==================== INIT ====================
+// ==================== HELP MODAL ====================
+function openHelp() { document.getElementById('mHelp').classList.add('show'); }
+function closeHelp() { document.getElementById('mHelp').classList.remove('show'); }
+
 // ==================== CURRENT MEMBER ====================
 let currentMember = null; // { id, name }
 
