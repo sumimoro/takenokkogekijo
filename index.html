@@ -430,6 +430,36 @@ input,select{font-family:inherit;font-size:inherit;}
 .att-sched-btn.act{border-color:var(--primary);color:var(--primary);background:var(--primary-l);}
 .att-decided-badge{display:inline-block;font-size:.65rem;background:var(--primary);
   color:#fff;border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:middle;}
+
+/* ===== DIRECT REHEARSAL ===== */
+.dr-card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:8px;
+  box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.dr-card.past{opacity:.5;}
+.dr-date-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:5px;}
+.dr-date{font-weight:700;font-size:.95rem;color:var(--text);}
+.dr-info-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.dr-script{font-size:.75rem;color:var(--primary);background:var(--primary-l);
+  padding:2px 8px;border-radius:8px;font-weight:600;}
+.dr-venue-tag{font-size:.75rem;color:#1565c0;background:#e3f2fd;
+  padding:2px 8px;border-radius:8px;font-weight:600;}
+.dr-att-row{display:flex;gap:10px;align-items:center;margin-bottom:8px;}
+.dr-att-btn{padding:9px 22px;border-radius:20px;border:2px solid;
+  font-size:.9rem;font-weight:700;cursor:pointer;transition:.1s;
+  -webkit-tap-highlight-color:transparent;}
+.dr-att-btn.attend{background:var(--maeure-l);border-color:var(--maeure);color:var(--maeure);}
+.dr-att-btn.absent{background:#ffebee;border-color:#c62828;color:#c62828;}
+.dr-att-btn.unset{background:#f5f5f5;border-color:var(--border);color:var(--sub);}
+.dr-att-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.dr-att-chip{font-size:.72rem;padding:2px 8px;border-radius:10px;font-weight:600;}
+.dr-att-chip.attend{background:var(--maeure-l);color:var(--maeure);}
+.dr-att-chip.absent{background:#ffebee;color:#c62828;}
+.dr-sect-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.dr-sect-lbl{font-size:.8rem;font-weight:700;color:var(--sub);letter-spacing:.03em;}
+/* Venue chip (reuse for add rehearsal modal) */
+.dr-venue-chip{padding:9px 16px;border-radius:20px;border:2px solid var(--border);
+  background:#fff;font-size:.88rem;font-weight:600;color:var(--sub);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
+.dr-venue-chip.sel{background:var(--oki-l);border-color:var(--oki);color:var(--oki);}
 </style>
 </head>
 <body>
@@ -887,6 +917,33 @@ input,select{font-family:inherit;font-size:inherit;}
   </div>
 </div>
 
+<!-- 稽古を直接追加モーダル -->
+<div class="moverlay" id="mDirectRehearsal">
+  <div class="modal">
+    <div class="modal-title">🎭 稽古を追加</div>
+    <div class="fg">
+      <label class="flabel">稽古日</label>
+      <input class="finput" id="iDrDate" type="date">
+    </div>
+    <div class="fg">
+      <label class="flabel">時間（例: 20:00〜22:00、午前 など）</label>
+      <input class="finput" id="iDrTime" type="text" placeholder="20:00〜22:00" autocomplete="off">
+    </div>
+    <div class="fg">
+      <label class="flabel">場面（複数選択可・なしの場合は全体稽古）</label>
+      <div id="drScriptChips" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0"></div>
+    </div>
+    <div class="fg">
+      <label class="flabel">稽古場所</label>
+      <div id="drVenueChips" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0"></div>
+    </div>
+    <div class="frow">
+      <button class="btn btn-s" style="flex:1" onclick="closeModal('mDirectRehearsal')">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="saveDirectRehearsal()">追加</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase & Logic -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -919,6 +976,12 @@ let unsubMembers  = null;
 let unsubChildren = null;
 let unsubTickets  = null;
 let respChildId   = null; // 回答選択中のこどもID
+
+// 直接稽古登録
+let directAttendances = [];
+let unsubDirectAtt    = null;
+let drSelectedScripts = [];
+let drSelectedVenue   = '';  // '' = 場所なし, 文字列 = 場所名
 
 // ==================== INIT ====================
 // ==================== HELP MODAL ====================
@@ -1018,6 +1081,7 @@ window.addEventListener('DOMContentLoaded', () => {
   subscribeVenues();
   subscribeAllRehearsals();
   subscribeAllSchedResponses();
+  subscribeDirectAttendance();
   document.querySelectorAll('.moverlay').forEach(o => {
     o.addEventListener('click', e => {
       if(e.target !== o) return;
@@ -1711,27 +1775,42 @@ function renderSchedList() {
   const el = document.getElementById('schedListContent');
   const admin = canAdmin();
   const createBtn = admin ? `<button class="btn btn-s btn-blk" style="margin-top:8px" onclick="openCreateSched()">＋ 日程調整を作成</button>` : '';
-  if(schedules.length === 0) {
-    el.innerHTML = `<div class="empty"><div class="empty-ic">📅</div><div>日程調整はありません</div></div>${createBtn}`;
-    return;
-  }
-  el.innerHTML = schedules.map(s => {
-    const isClosed = s.status === 'closed';
-    return `<div class="sched-card" onclick="openSchedDetail('${s.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:1rem;margin-bottom:3px">${esc(s.title)}</div>
-          ${s.description ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:3px">${esc(s.description)}</div>` : ''}
-          <div style="font-size:.75rem;color:var(--sub)">日程候補 ${(s.slots||[]).length}件</div>
-        </div>
-        <span class="${isClosed?'sched-closed':'sched-open'}">${isClosed?'締切済':'回答受付中'}</span>
-      </div>
-      ${admin ? `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
-        <button class="btn btn-blk" style="width:100%;background:var(--primary-l);color:var(--primary);font-weight:700;font-size:.85rem;padding:8px"
-          onclick="openRehearsalPlanFor('${s.id}',event)">🎯 稽古日を決める</button>
-      </div>` : ''}
-    </div>`;
-  }).join('') + createBtn;
+
+  const schedCards = schedules.length === 0
+    ? `<div class="empty" style="padding:20px 0"><div class="empty-ic">📅</div><div>日程調整はありません</div></div>`
+    : schedules.map(s => {
+        const isClosed = s.status === 'closed';
+        return `<div class="sched-card" onclick="openSchedDetail('${s.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:1rem;margin-bottom:3px">${esc(s.title)}</div>
+              ${s.description ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:3px">${esc(s.description)}</div>` : ''}
+              <div style="font-size:.75rem;color:var(--sub)">日程候補 ${(s.slots||[]).length}件</div>
+            </div>
+            <span class="${isClosed?'sched-closed':'sched-open'}">${isClosed?'締切済':'回答受付中'}</span>
+          </div>
+          ${admin ? `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+            <button class="btn btn-blk" style="width:100%;background:var(--primary-l);color:var(--primary);font-weight:700;font-size:.85rem;padding:8px"
+              onclick="openRehearsalPlanFor('${s.id}',event)">🎯 稽古日を決める</button>
+          </div>` : ''}
+        </div>`;
+      }).join('');
+
+  el.innerHTML = `
+    <div class="dr-sect-hdr">
+      <span class="dr-sect-lbl">🎭 稽古リスト</span>
+      ${admin ? `<button class="btn btn-p btn-sm" onclick="openAddDirectRehearsal()">＋ 稽古を追加</button>` : ''}
+    </div>
+    <div id="directRehearsalSection">
+      <div style="color:var(--sub);font-size:.85rem;padding:4px 0">読み込み中...</div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin:16px 0 12px"></div>
+    <div class="dr-sect-lbl" style="margin-bottom:10px">📋 日程調整</div>
+    ${schedCards}
+    ${createBtn}
+  `;
+
+  renderDirectRehearsals();
 }
 
 // ---- Detail ----
@@ -2571,6 +2650,209 @@ function getRehearsalScriptLabel(r) {
   return r.scriptName || r.teamName || '全体稽古';
 }
 
+// ==================== DIRECT REHEARSAL ====================
+
+function subscribeDirectAttendance() {
+  if(unsubDirectAtt) unsubDirectAtt();
+  unsubDirectAtt = db.collection('takenoko_attendance').onSnapshot(snap => {
+    directAttendances = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderDirectRehearsals();
+    if(document.getElementById('calView').style.display !== 'none') renderCalendar();
+  }, ()=>{});
+}
+
+function renderDirectRehearsals() {
+  const container = document.getElementById('directRehearsalSection');
+  if(!container) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  const directs = allRehearsals
+    .filter(r => r.direct === true)
+    .sort((a,b) => {
+      const da = getRehearsalDateStr(a) || '9999-99-99';
+      const db_ = getRehearsalDateStr(b) || '9999-99-99';
+      if(da !== db_) return da.localeCompare(db_);
+      return (a.time||'').localeCompare(b.time||'');
+    });
+
+  const admin = canAdmin();
+
+  if(directs.length === 0) {
+    container.innerHTML = `<div style="color:var(--sub);font-size:.85rem;padding:6px 0 2px">稽古予定はありません</div>`;
+    return;
+  }
+
+  container.innerHTML = directs.map(r => {
+    const dateStr = getRehearsalDateStr(r) || '';
+    const isPast  = dateStr && dateStr < today;
+
+    // 場面ラベル
+    const scriptPills = r.scripts && r.scripts.length > 0
+      ? r.scripts.map(s => `<span class="dr-script">📜 ${esc(s.name)}</span>`).join('')
+      : `<span class="dr-script">全体稽古</span>`;
+
+    // 自分の出欠
+    const myAtt = currentMember
+      ? directAttendances.find(a => a.rehearsalId === r.id && a.memberName === currentMember.name)
+      : null;
+    const myStatus = myAtt?.status || 'unset';
+
+    // 参加者・欠席者リスト
+    const attendList = directAttendances.filter(a => a.rehearsalId === r.id && a.status === 'attend').map(a => a.memberName);
+    const absentList  = directAttendances.filter(a => a.rehearsalId === r.id && a.status === 'absent').map(a => a.memberName);
+    const chips = [
+      ...attendList.map(n => `<span class="dr-att-chip attend">○ ${esc(n)}</span>`),
+      ...absentList.map(n  => `<span class="dr-att-chip absent">× ${esc(n)}</span>`)
+    ].join('');
+
+    const attBtns = currentMember ? `
+      <div class="dr-att-row">
+        <button class="dr-att-btn ${myStatus==='attend'?'attend':'unset'}"
+          onclick="setDirectAttendance('${r.id}','attend')">○ 参加</button>
+        <button class="dr-att-btn ${myStatus==='absent'?'absent':'unset'}"
+          onclick="setDirectAttendance('${r.id}','absent')">× 欠席</button>
+      </div>` : '';
+
+    const adminBtns = admin ? `
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="edit-venue-btn" onclick="editRehearsalTime('${r.id}')" title="時間を変更" style="color:#888;font-size:.85rem;padding:3px 6px">🕐</button>
+        <button class="edit-venue-btn" onclick="editRehearsalVenue('${r.id}')" title="場所を変更" style="color:#888;font-size:.85rem;padding:3px 6px">✏️</button>
+        <button class="edit-venue-btn" onclick="deleteDirectRehearsal('${r.id}')" title="削除" style="color:#bdbdbd;font-size:.85rem;padding:3px 6px">🗑</button>
+      </div>` : '';
+
+    return `<div class="dr-card${isPast?' past':''}">
+      <div class="dr-date-row">
+        <div style="flex:1;min-width:0">
+          <div class="dr-date">${esc(r.slotLabel||'')}</div>
+          <div class="dr-info-row">
+            ${scriptPills}
+            ${r.venue ? `<span class="dr-venue-tag">📍 ${esc(r.venue)}</span>` : ''}
+          </div>
+        </div>
+        ${adminBtns}
+      </div>
+      ${attBtns}
+      ${chips ? `<div class="dr-att-chips">${chips}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function setDirectAttendance(rehearsalId, status) {
+  if(!currentMember) return;
+  const memberName = currentMember.name;
+  const existing = directAttendances.find(a => a.rehearsalId === rehearsalId && a.memberName === memberName);
+  // 同じボタンを再タップで取り消す
+  if(existing && existing.status === status) {
+    await db.collection('takenoko_attendance').doc(existing.id).delete();
+    return;
+  }
+  const data = {
+    rehearsalId,
+    memberName,
+    memberId: currentMember.id || '',
+    status,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(existing) {
+    await db.collection('takenoko_attendance').doc(existing.id).set(data);
+  } else {
+    await db.collection('takenoko_attendance').add(data);
+  }
+}
+
+async function deleteDirectRehearsal(id) {
+  if(!confirm('この稽古を削除しますか？\n出欠データも削除されます。')) return;
+  // 出欠レコードを先に削除
+  const attDocs = directAttendances.filter(a => a.rehearsalId === id);
+  if(attDocs.length > 0) {
+    const batch = db.batch();
+    attDocs.forEach(a => batch.delete(db.collection('takenoko_attendance').doc(a.id)));
+    await batch.commit();
+  }
+  await db.collection('takenoko_rehearsals').doc(id).delete();
+}
+
+function openAddDirectRehearsal() {
+  drSelectedScripts = [];
+  drSelectedVenue   = '';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('iDrDate').value = today;
+  document.getElementById('iDrTime').value = '';
+  renderDrScriptChips();
+  renderDrVenueChips();
+  document.getElementById('mDirectRehearsal').classList.add('show');
+  setTimeout(() => document.getElementById('iDrDate').focus(), 120);
+}
+
+function renderDrScriptChips() {
+  const el = document.getElementById('drScriptChips');
+  if(!el) return;
+  if(scripts.length === 0) {
+    el.innerHTML = '<div style="font-size:.82rem;color:var(--sub)">場面がありません（全体稽古として登録します）</div>';
+    return;
+  }
+  el.innerHTML = scripts.map(sc => {
+    const sel = drSelectedScripts.some(s => s.id === sc.id);
+    return `<button type="button" onclick="toggleDrScript('${sc.id}','${esc(sc.name)}')"
+      style="padding:8px 16px;border-radius:20px;border:2px solid;font-size:.88rem;font-weight:600;cursor:pointer;
+      background:${sel?'var(--primary)':'#fff'};color:${sel?'#fff':'var(--sub)'};
+      border-color:${sel?'var(--primary)':'var(--border)'}">📜 ${esc(sc.name)}</button>`;
+  }).join('');
+}
+
+function toggleDrScript(id, name) {
+  const idx = drSelectedScripts.findIndex(s => s.id === id);
+  if(idx >= 0) drSelectedScripts.splice(idx, 1);
+  else drSelectedScripts.push({id, name});
+  renderDrScriptChips();
+}
+
+function renderDrVenueChips() {
+  const el = document.getElementById('drVenueChips');
+  if(!el) return;
+  const list = [...venues.map(v => ({id: v.id, name: v.name})), {id:'__none__', name:'場所なし'}];
+  el.innerHTML = list.map(v => {
+    const isNone = v.id === '__none__';
+    const sel = isNone ? drSelectedVenue === '' : drSelectedVenue === v.name;
+    return `<button type="button" class="dr-venue-chip${sel?' sel':''}"
+      onclick="selectDrVenue('${isNone ? '' : esc(v.name)}')">
+      ${isNone ? '場所なし' : '📍 ' + esc(v.name)}
+    </button>`;
+  }).join('');
+}
+
+function selectDrVenue(name) {
+  drSelectedVenue = name;
+  renderDrVenueChips();
+}
+
+async function saveDirectRehearsal() {
+  const dateStr = document.getElementById('iDrDate').value;
+  if(!dateStr) { alert('稽古日を入力してください'); return; }
+  const time = document.getElementById('iDrTime').value.trim();
+
+  const d = new Date(dateStr + 'T00:00:00');
+  const days = ['日','月','火','水','木','金','土'];
+  const dateLabel = `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`;
+  const slotLabel = time ? `${dateLabel} ${time}` : dateLabel;
+
+  const scriptsArr = [...drSelectedScripts];
+  const scriptName = scriptsArr.length > 0 ? scriptsArr.map(s => s.name).join('・') : '全体稽古';
+  const venue = drSelectedVenue || null;
+
+  closeModal('mDirectRehearsal');
+  await db.collection('takenoko_rehearsals').add({
+    direct:     true,
+    date:       dateStr,
+    time:       time || '',
+    slotLabel,
+    scripts:    scriptsArr,
+    scriptName,
+    venue,
+    createdAt:  firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
 // ==================== CALENDAR ====================
 let allRehearsals    = [];
 let unsubAllReh      = null;
@@ -2586,6 +2868,7 @@ function subscribeAllRehearsals() {
     allRehearsals = snap.docs.map(d=>({id:d.id,...d.data()}));
     if(document.getElementById('calView').style.display !== 'none') renderCalendar();
     if(document.getElementById('attView').style.display  !== 'none') renderAttView();
+    renderDirectRehearsals();
   }, ()=>{});
 }
 
@@ -2600,6 +2883,17 @@ function subscribeAllSchedResponses() {
 
 // スロットに参加できるメンバー名を返す {ok:[], maybe:[]}
 function getSlotAttendees(rehearsal) {
+  // 直接追加した稽古: takenoko_attendance を参照
+  if(rehearsal.direct) {
+    const ok = directAttendances
+      .filter(a => a.rehearsalId === rehearsal.id && a.status === 'attend')
+      .map(a => a.memberName);
+    const absent = directAttendances
+      .filter(a => a.rehearsalId === rehearsal.id && a.status === 'absent')
+      .map(a => a.memberName);
+    return { ok, maybe: absent };
+  }
+
   const responses = allSchedResponses.filter(r => r.scheduleId === rehearsal.scheduleId);
   const ok = [], maybe = [];
   // 複数脚本対応: scripts配列 → 各脚本のメンバーを集める
@@ -2723,10 +3017,19 @@ function renderCalendar() {
       ${dayEvents.map(r => {
         const timeLabel = (r.slotLabel||'').replace(/^\d+\/\d+\([^)]+\)\s*/,'') || '';
         const att = getSlotAttendees(r);
-        const okChips  = att.ok.map(n=>`<span class="cal-att-chip ok">${esc(n)}</span>`).join('');
-        const mbChips  = att.maybe.map(n=>`<span class="cal-att-chip mb">${esc(n)}</span>`).join('');
-        const attHtml  = (att.ok.length + att.maybe.length) > 0
-          ? `<div class="cal-att-row">${okChips}${mbChips}</div>` : '';
+        let attHtml = '';
+        if(r.direct) {
+          // 直接追加の稽古: 参加/欠席で表示
+          const attendChips = att.ok.map(n=>`<span class="dr-att-chip attend" style="font-size:.68rem">○ ${esc(n)}</span>`).join('');
+          const absentChips = att.maybe.map(n=>`<span class="dr-att-chip absent" style="font-size:.68rem">× ${esc(n)}</span>`).join('');
+          if(att.ok.length + att.maybe.length > 0)
+            attHtml = `<div class="cal-att-row">${attendChips}${absentChips}</div>`;
+        } else {
+          const okChips = att.ok.map(n=>`<span class="cal-att-chip ok">${esc(n)}</span>`).join('');
+          const mbChips = att.maybe.map(n=>`<span class="cal-att-chip mb">${esc(n)}</span>`).join('');
+          if(att.ok.length + att.maybe.length > 0)
+            attHtml = `<div class="cal-att-row">${okChips}${mbChips}</div>`;
+        }
         return `<div class="cal-event-item">
           <div class="cal-event-time">${esc(timeLabel)||'—'}</div>
           <div style="flex:1;min-width:0">
