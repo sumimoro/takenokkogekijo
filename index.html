@@ -920,7 +920,7 @@ input,select{font-family:inherit;font-size:inherit;}
 <!-- 稽古を直接追加モーダル -->
 <div class="moverlay" id="mDirectRehearsal">
   <div class="modal">
-    <div class="modal-title">🎭 稽古を追加</div>
+    <div class="modal-title" id="mDirectRehearsalTitle">🎭 稽古を追加</div>
     <div class="fg">
       <label class="flabel">稽古日</label>
       <input class="finput" id="iDrDate" type="date">
@@ -991,6 +991,7 @@ let directAttendances = [];
 let unsubDirectAtt    = null;
 let drSelectedScripts = [];
 let drSelectedVenue   = '';  // '' = 場所なし, 文字列 = 場所名
+let _editingDirectId  = null; // 編集中の稽古ID（nullなら新規追加）
 
 // ==================== INIT ====================
 // ==================== HELP MODAL ====================
@@ -2726,8 +2727,7 @@ function renderDirectRehearsals() {
 
     const adminBtns = admin ? `
       <div style="display:flex;gap:4px;flex-shrink:0">
-        <button class="edit-venue-btn" onclick="editRehearsalTime('${r.id}')" title="時間を変更" style="color:#888;font-size:.85rem;padding:3px 6px">🕐</button>
-        <button class="edit-venue-btn" onclick="editRehearsalVenue('${r.id}')" title="場所を変更" style="color:#888;font-size:.85rem;padding:3px 6px">✏️</button>
+        <button class="edit-venue-btn" onclick="openAddDirectRehearsal('${r.id}')" title="編集" style="color:#888;font-size:.85rem;padding:3px 6px">✏️</button>
         <button class="edit-venue-btn" onclick="deleteDirectRehearsal('${r.id}')" title="削除" style="color:#bdbdbd;font-size:.85rem;padding:3px 6px">🗑</button>
       </div>` : '';
 
@@ -2784,14 +2784,34 @@ async function deleteDirectRehearsal(id) {
   await db.collection('takenoko_rehearsals').doc(id).delete();
 }
 
-function openAddDirectRehearsal() {
-  drSelectedScripts = [];
-  drSelectedVenue   = '';
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('iDrDate').value = today;
-  document.getElementById('iDrTimeStart').value = '19:00';
-  document.getElementById('iDrTimeEnd').value = '21:00';
-  document.getElementById('iDrMemo').value = '';
+function openAddDirectRehearsal(editId) {
+  _editingDirectId = editId || null;
+
+  if(editId) {
+    // 編集モード：既存データを読み込む
+    const r = allRehearsals.find(rh => rh.id === editId);
+    if(!r) return;
+    document.getElementById('mDirectRehearsalTitle').textContent = '🎭 稽古を編集';
+    document.getElementById('iDrDate').value = r.date || '';
+    // 時間を開始〜終了に分割
+    const timeParts = (r.time || '').split('〜');
+    document.getElementById('iDrTimeStart').value = timeParts[0] || '';
+    document.getElementById('iDrTimeEnd').value   = timeParts[1] || '';
+    drSelectedScripts = r.scripts ? [...r.scripts] : [];
+    drSelectedVenue   = r.venue || '';
+    document.getElementById('iDrMemo').value = r.memo || '';
+  } else {
+    // 新規追加モード
+    document.getElementById('mDirectRehearsalTitle').textContent = '🎭 稽古を追加';
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('iDrDate').value = today;
+    document.getElementById('iDrTimeStart').value = '19:00';
+    document.getElementById('iDrTimeEnd').value = '21:00';
+    drSelectedScripts = [];
+    drSelectedVenue   = '';
+    document.getElementById('iDrMemo').value = '';
+  }
+
   renderDrScriptChips();
   renderDrVenueChips();
   document.getElementById('mDirectRehearsal').classList.add('show');
@@ -2858,17 +2878,34 @@ async function saveDirectRehearsal() {
   const memo  = document.getElementById('iDrMemo').value.trim();
 
   closeModal('mDirectRehearsal');
-  await db.collection('takenoko_rehearsals').add({
-    direct:     true,
-    date:       dateStr,
-    time:       time || '',
-    slotLabel,
-    scripts:    scriptsArr,
-    scriptName,
-    venue,
-    memo:       memo || '',
-    createdAt:  firebase.firestore.FieldValue.serverTimestamp()
-  });
+
+  if(_editingDirectId) {
+    // 編集モード：既存ドキュメントを更新
+    await db.collection('takenoko_rehearsals').doc(_editingDirectId).update({
+      date:      dateStr,
+      time:      time || '',
+      slotLabel,
+      scripts:   scriptsArr,
+      scriptName,
+      venue,
+      memo:      memo || '',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    _editingDirectId = null;
+  } else {
+    // 新規追加
+    await db.collection('takenoko_rehearsals').add({
+      direct:    true,
+      date:      dateStr,
+      time:      time || '',
+      slotLabel,
+      scripts:   scriptsArr,
+      scriptName,
+      venue,
+      memo:      memo || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
 }
 
 // ==================== CALENDAR ====================
