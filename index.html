@@ -1778,8 +1778,6 @@ function subscribeSchedules() {
 function renderSchedList() {
   const el = document.getElementById('schedListContent');
   const admin = canAdmin();
-  const createBtn = admin ? `<button class="btn btn-s btn-blk" style="margin-top:8px" onclick="openCreateSched()">＋ 日程調整を作成</button>` : '';
-
   const schedCards = schedules.length === 0
     ? `<div class="empty" style="padding:20px 0"><div class="empty-ic">📅</div><div>日程調整はありません</div></div>`
     : schedules.map(s => {
@@ -1801,17 +1799,20 @@ function renderSchedList() {
       }).join('');
 
   el.innerHTML = `
-    <div class="dr-sect-hdr">
-      <span class="dr-sect-lbl">🎭 稽古リスト</span>
-      ${admin ? `<button class="btn btn-p btn-sm" onclick="openAddDirectRehearsal()">＋ 稽古を追加</button>` : ''}
-    </div>
+    ${admin ? `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+      <button class="btn btn-p" style="padding:14px 8px;font-size:.95rem;border-radius:12px;font-weight:700"
+        onclick="openAddDirectRehearsal()">🎭 稽古を追加</button>
+      <button class="btn btn-s" style="padding:14px 8px;font-size:.95rem;border-radius:12px;font-weight:700"
+        onclick="openCreateSched()">📋 日程調整を作成</button>
+    </div>` : ''}
+    <div class="dr-sect-lbl" style="margin-bottom:8px">🎭 稽古リスト</div>
     <div id="directRehearsalSection">
       <div style="color:var(--sub);font-size:.85rem;padding:4px 0">読み込み中...</div>
     </div>
     <div style="border-top:1px solid var(--border);margin:16px 0 12px"></div>
     <div class="dr-sect-lbl" style="margin-bottom:10px">📋 日程調整</div>
     ${schedCards}
-    ${createBtn}
   `;
 
   renderDirectRehearsals();
