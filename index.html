@@ -1090,15 +1090,7 @@ window.addEventListener('DOMContentLoaded', () => {
   subscribeAllRehearsals();
   subscribeAllSchedResponses();
   subscribeDirectAttendance();
-  document.querySelectorAll('.moverlay').forEach(o => {
-    o.addEventListener('click', e => {
-      if(e.target !== o) return;
-      o.classList.remove('show');
-      if(o.id === 'mSchedDetail' && unsubSchedResp) {
-        unsubSchedResp(); unsubSchedResp = null;
-      }
-    });
-  });
+  // モーダル外クリックで閉じない（✕・キャンセルボタンのみ）
 });
 
 // ==================== SUBSCRIPTIONS ====================
