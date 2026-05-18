@@ -984,6 +984,7 @@ let unsubMembers  = null;
 let unsubChildren = null;
 let unsubTickets  = null;
 let respChildId   = null; // 回答選択中のこどもID
+let _tabRestored  = false; // タブ復元フラグ（初回のみ）
 
 // 直接稽古登録
 let directAttendances = [];
@@ -1111,6 +1112,15 @@ function subscribeMembers() {
       document.getElementById('homeScreen').classList.add('hidden');
       updateHdrMember();
       updateAdminUI();
+      // ページリロード時に最後のタブを復元（初回のみ）
+      if(!_tabRestored) {
+        _tabRestored = true;
+        const lastTab = localStorage.getItem('takenoko_lastTab');
+        if(lastTab) {
+          const btn = document.getElementById('tb-' + lastTab.toLowerCase());
+          if(btn) switchTab(lastTab, btn);
+        }
+      }
     } else {
       showHomeScreen();
     }
