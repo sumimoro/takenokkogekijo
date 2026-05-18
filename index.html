@@ -926,8 +926,12 @@ input,select{font-family:inherit;font-size:inherit;}
       <input class="finput" id="iDrDate" type="date">
     </div>
     <div class="fg">
-      <label class="flabel">時間（例: 20:00〜22:00、午前 など）</label>
-      <input class="finput" id="iDrTime" type="text" placeholder="20:00〜22:00" autocomplete="off">
+      <label class="flabel">時間</label>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <input class="finput" type="time" id="iDrTimeStart" value="19:00" style="flex:1;min-width:0;">
+        <span style="color:var(--sub);flex-shrink:0;">〜</span>
+        <input class="finput" type="time" id="iDrTimeEnd" value="21:00" style="flex:1;min-width:0;">
+      </div>
     </div>
     <div class="fg">
       <label class="flabel">場面（複数選択可・なしの場合は全体稽古）</label>
@@ -2777,7 +2781,8 @@ function openAddDirectRehearsal() {
   drSelectedVenue   = '';
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('iDrDate').value = today;
-  document.getElementById('iDrTime').value = '';
+  document.getElementById('iDrTimeStart').value = '19:00';
+  document.getElementById('iDrTimeEnd').value = '21:00';
   renderDrScriptChips();
   renderDrVenueChips();
   document.getElementById('mDirectRehearsal').classList.add('show');
@@ -2829,7 +2834,9 @@ function selectDrVenue(name) {
 async function saveDirectRehearsal() {
   const dateStr = document.getElementById('iDrDate').value;
   if(!dateStr) { alert('稽古日を入力してください'); return; }
-  const time = document.getElementById('iDrTime').value.trim();
+  const timeStart = document.getElementById('iDrTimeStart').value;
+  const timeEnd   = document.getElementById('iDrTimeEnd').value;
+  const time = timeStart ? (timeEnd ? timeStart + '〜' + timeEnd : timeStart + '〜') : '';
 
   const d = new Date(dateStr + 'T00:00:00');
   const days = ['日','月','火','水','木','金','土'];
