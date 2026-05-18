@@ -941,6 +941,10 @@ input,select{font-family:inherit;font-size:inherit;}
       <label class="flabel">稽古場所</label>
       <div id="drVenueChips" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0"></div>
     </div>
+    <div class="fg">
+      <label class="flabel">備考（任意）</label>
+      <input class="finput" id="iDrMemo" type="text" placeholder="連絡事項・持ち物など" autocomplete="off">
+    </div>
     <div class="frow">
       <button class="btn btn-s" style="flex:1" onclick="closeModal('mDirectRehearsal')">キャンセル</button>
       <button class="btn btn-p" style="flex:1" onclick="saveDirectRehearsal()">追加</button>
@@ -2736,6 +2740,7 @@ function renderDirectRehearsals() {
         </div>
         ${adminBtns}
       </div>
+      ${r.memo ? `<div style="font-size:.78rem;color:var(--sub);margin-bottom:8px;padding:5px 8px;background:#fafafa;border-radius:6px;border-left:3px solid var(--border)">📝 ${esc(r.memo)}</div>` : ''}
       ${attBtns}
       ${chips ? `<div class="dr-att-chips">${chips}</div>` : ''}
     </div>`;
@@ -2784,6 +2789,7 @@ function openAddDirectRehearsal() {
   document.getElementById('iDrDate').value = today;
   document.getElementById('iDrTimeStart').value = '19:00';
   document.getElementById('iDrTimeEnd').value = '21:00';
+  document.getElementById('iDrMemo').value = '';
   renderDrScriptChips();
   renderDrVenueChips();
   document.getElementById('mDirectRehearsal').classList.add('show');
@@ -2847,6 +2853,7 @@ async function saveDirectRehearsal() {
   const scriptsArr = [...drSelectedScripts];
   const scriptName = scriptsArr.length > 0 ? scriptsArr.map(s => s.name).join('・') : '全体稽古';
   const venue = drSelectedVenue || null;
+  const memo  = document.getElementById('iDrMemo').value.trim();
 
   closeModal('mDirectRehearsal');
   await db.collection('takenoko_rehearsals').add({
@@ -2857,6 +2864,7 @@ async function saveDirectRehearsal() {
     scripts:    scriptsArr,
     scriptName,
     venue,
+    memo:       memo || '',
     createdAt:  firebase.firestore.FieldValue.serverTimestamp()
   });
 }
