@@ -12,6 +12,11 @@ const db = admin.firestore();
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
+// JSTの現在時刻を取得
+function getJSTNow() {
+  return new Date(Date.now() + 9 * 60 * 60 * 1000);
+}
+
 // "5/11(月)" → "2026-05-11" に変換
 function parseDateLabel(dateLabel) {
   const match = (dateLabel || '').match(/^(\d+)\/(\d+)/);
@@ -20,46 +25,46 @@ function parseDateLabel(dateLabel) {
   const day   = parseInt(match[2]);
   const now   = getJSTNow();
   let year    = now.getUTCFullYear();
-  // 月が現在より小さければ来年と判定
   if (month < now.getUTCMonth() + 1) year++;
   return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
 }
 
-// JSTの現在時刻を取得
-function getJSTNow() {
-  return new Date(Date.now() + 9 * 60 * 60 * 1000);
-}
-
-// 対象日（YYYY-MM-DD）を返す（当日 12:00 JST に送信）
-function getTargetInfo() {
+// 対象日（YYYY-MM-DD）を返す
+function getTargetDate() {
   const now = getJSTNow();
-  const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD（JST基準）
-  return { dateStr };
+  return now.toISOString().split('T')[0];
 }
 
-// Discord Embedカラー
-const COLOR_TODAY = 0x2f9e44; // 緑
+// LINE Messaging APIに送信
+async function sendToLine(message) {
+  const token   = process.env.LINE_CHANNEL_TOKEN;
+  const groupId = process.env.LINE_GROUP_ID;
+  if (!token || !groupId) {
+    console.log('LINE_CHANNEL_TOKEN or LINE_GROUP_ID未設定 → スキップ');
+    return;
+  }
 
-// Discord Webhookに送信
-async function sendToDiscord(payload) {
-  const body = JSON.stringify(payload);
-  const url  = new URL(process.env.DISCORD_WEBHOOK_URL);
+  const body = JSON.stringify({
+    to: groupId,
+    messages: [{ type: 'text', text: message }]
+  });
 
   return new Promise((resolve, reject) => {
     const req = https.request({
-      hostname: url.hostname,
-      path: url.pathname + url.search,
+      hostname: 'api.line.me',
+      path: '/v2/bot/message/push',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
         'Content-Length': Buffer.byteLength(body)
       }
     }, res => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
-        console.log(`Discord: HTTP ${res.statusCode}`);
-        if (res.statusCode >= 400) reject(new Error(`Discord error ${res.statusCode}: ${data}`));
+        console.log(`LINE: HTTP ${res.statusCode}`);
+        if (res.statusCode >= 400) reject(new Error(`LINE error ${res.statusCode}: ${data}`));
         else resolve();
       });
     });
@@ -70,11 +75,18 @@ async function sendToDiscord(payload) {
 }
 
 async function main() {
-  const { dateStr } = getTargetInfo();
+  const dateStr = getTargetDate();
   console.log(`対象日: ${dateStr}`);
 
-  // schedules から slotId → date のマップを作成
-  const schedSnap = await db.collection('schedules').get();
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dateObj   = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  const weekday   = WEEKDAYS[dateObj.getUTCDay()];
+  const dateLabel = `${m}月${d}日（${weekday}）`;
+
+  const targets = [];
+
+  // ① takenoko_schedules → takenoko_rehearsals（日程調整ルート）
+  const schedSnap = await db.collection('takenoko_schedules').get();
   const slotDateMap = {};
   schedSnap.forEach(doc => {
     const s = doc.data();
@@ -86,13 +98,14 @@ async function main() {
     });
   });
 
-  // rehearsals を取得して対象日で絞り込み
-  const rehSnap = await db.collection('rehearsals').get();
-  const targets = [];
+  const rehSnap = await db.collection('takenoko_rehearsals').get();
   rehSnap.forEach(doc => {
     const r = doc.data();
-    if (slotDateMap[r.slotId] === dateStr) {
-      targets.push(r);
+    // 直接登録（direct:true）は date フィールドで判定
+    if (r.direct) {
+      if (r.date === dateStr) targets.push(r);
+    } else {
+      if (slotDateMap[r.slotId] === dateStr) targets.push(r);
     }
   });
 
@@ -101,41 +114,31 @@ async function main() {
     return;
   }
 
-  // 日付表示を整形（YYYY-MM-DDから直接パースしてタイムゾーンのズレを防ぐ）
-  const [y, m, d]  = dateStr.split('-').map(Number);
-  const dateObj    = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-  const month      = m;
-  const day        = d;
-  const weekday    = WEEKDAYS[dateObj.getUTCDay()];
-  const dateLabel  = `${month}月${day}日（${weekday}）`;
+  // メッセージ組み立て
+  const lines = [`📅 本日の稽古　${dateLabel}\n`];
+  targets.forEach(r => {
+    const scriptLabel = (r.scripts && r.scripts.length > 0)
+      ? r.scripts.map(s => s.name).join('・')
+      : (r.scriptName || '全体稽古');
 
-  // 稽古ごとに1ブロック
-  const description = targets.map(r => {
-    const timeLabel = (r.slotLabel || '').replace(/^\d+\/\d+\([^)]+\)\s*/, '').trim() || '—';
-    // 複数脚本対応
-    let scriptLabel;
-    if(r.scripts && r.scripts.length > 0) {
-      scriptLabel = r.scripts.map(s => s.name).join('・');
+    let timeLabel = '—';
+    if (r.direct) {
+      if (r.startTime) timeLabel = r.endTime ? `${r.startTime}〜${r.endTime}` : `${r.startTime}〜`;
     } else {
-      scriptLabel = r.scriptName || '全体稽古';
+      timeLabel = (r.slotLabel || '').replace(/^\d+\/\d+\([^)]+\)\s*/, '').trim() || '—';
     }
-    return [
-      `## 🎭　${scriptLabel}`,
-      `🕐　**${timeLabel}**`,
-      `📍　**${r.venue || '未定'}**`,
-    ].join('\n');
-  }).join('\n\n');
 
-  const embed = {
-    title: `📅　本日の稽古　${dateLabel}`,
-    description,
-    color: 0xe67e22, // オレンジで目立つ
-    footer: { text: 'メゾン・ドゥ・ココル 稽古管理システム' },
-    timestamp: new Date().toISOString()
-  };
+    lines.push(`🎭 ${scriptLabel}`);
+    lines.push(`🕐 ${timeLabel}`);
+    lines.push(`📍 ${r.venue || '未定'}`);
+    if (r.notes) lines.push(`📝 ${r.notes}`);
+    lines.push('');
+  });
+  lines.push('たけのっ子劇場 稽古管理システム');
 
-  await sendToDiscord({ content: '@everyone', embeds: [embed] });
-  console.log(`✅ ${targets.length}件の稽古リマインドを送信しました`);
+  const message = lines.join('\n');
+  await sendToLine(message);
+  console.log(`✅ LINE: ${targets.length}件の稽古リマインドを送信しました`);
 }
 
 main().catch(err => {
