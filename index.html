@@ -698,7 +698,7 @@ input,select{font-family:inherit;font-size:inherit;}
 <!-- 日程調整 作成 -->
 <div class="moverlay" id="mCreateSched">
   <div class="modal">
-    <div class="modal-title">日程調整を作成</div>
+    <div class="modal-title" id="createSchedTitle">日程調整を作成</div>
     <div class="fg">
       <label class="flabel">タイトル</label>
       <input class="finput" id="iSchedTitle" type="text" placeholder="例：6月稽古日程調整" autocomplete="off">
@@ -714,7 +714,7 @@ input,select{font-family:inherit;font-size:inherit;}
     </div>
     <div class="frow">
       <button class="btn btn-s" style="flex:1" onclick="closeModal('mCreateSched')">キャンセル</button>
-      <button class="btn btn-p" style="flex:1" onclick="saveSched()">作成</button>
+      <button class="btn btn-p" style="flex:1" id="saveSchedBtn" onclick="saveSched()">作成</button>
     </div>
   </div>
 </div>
@@ -737,6 +737,7 @@ input,select{font-family:inherit;font-size:inherit;}
     </div>
     <div class="frow" style="margin-top:8px;flex-wrap:wrap;gap:8px">
       <button class="btn btn-s" style="flex:1;min-width:100px" onclick="closeModal('mSchedDetail')">閉じる</button>
+      <button class="btn btn-s" id="schedEditBtn" style="flex:1;min-width:100px;background:#fff8e1;color:#f57f17;border-color:#ffe082;" onclick="openEditSched()">✏️ 編集</button>
       <button class="btn btn-d btn-sm" style="flex:1;min-width:100px" onclick="deleteSched()">🗑 削除</button>
     </div>
   </div>
@@ -1770,6 +1771,7 @@ let schedules    = [];
 let curSchedId   = null;
 let schedResp    = [];   // responses for current schedule
 let editSlots    = [];   // slots being edited in create modal
+let editingSchedId = null; // null=新規, 文字列=編集中ID
 let respAnswers  = {};   // { slotId: 'ok'|'maybe'|'ng' }
 let unsubScheds  = null;
 let unsubSchedResp = null;
@@ -1841,6 +1843,7 @@ function openSchedDetail(id) {
   const admin = canAdmin();
   document.querySelector('#mSchedDetail .btn-blk[onclick="openRehearsalPlan()"]').style.display = admin ? '' : 'none';
   document.querySelector('#mSchedDetail .btn-d[onclick="deleteSched()"]').style.display = admin ? '' : 'none';
+  document.getElementById('schedEditBtn').style.display = admin ? '' : 'none';
   document.getElementById('mSchedDetail').classList.add('show');
   subscribeSchedResponses(id);
   subscribeDetailRehearsals(id);
@@ -1890,8 +1893,10 @@ function renderSchedGrid() {
   const bodyRows = schedResp.length === 0
     ? `<tr><td class="nc" style="color:var(--sub)">—</td>${slots.map(()=>'<td style="color:var(--sub)">—</td>').join('')}${hasComment?'<td>—</td>':''}</tr>`
     : schedResp.map(r =>
-        `<tr>
-          <td class="nc">${esc(r.memberName)}</td>
+        `<tr style="cursor:pointer" onclick="openRespondForName('${esc(r.memberName)}')" title="タップして編集">
+          <td class="nc" style="white-space:nowrap">
+            ${esc(r.memberName)}<span style="font-size:.65rem;color:var(--sub);margin-left:3px">✏️</span>
+          </td>
           ${hasComment ? `<td style="font-size:.72rem;color:var(--sub);text-align:left;min-width:90px;max-width:150px;white-space:pre-wrap;vertical-align:top;padding-top:8px">${esc(r.comment||'')}</td>` : ''}
           ${slots.map(sl => {
             const ans = (r.answers||{})[sl.id]||'';
@@ -1918,7 +1923,20 @@ function renderSchedGrid() {
 }
 
 // ---- Respond ----
-function openRespond() {
+function openRespondForName(name) {
+  if(currentMember) {
+    const myChildren = children.filter(c => c.parentId === currentMember.id);
+    const isMyChild = myChildren.some(c => c.name === name);
+    const isMe = currentMember.name === name;
+    if(!isMyChild && !isMe) {
+      alert('編集できるのは自分またはお子様の回答のみです');
+      return;
+    }
+  }
+  openRespond(name);
+}
+
+function openRespond(prefillName) {
   const s = schedules.find(s=>s.id===curSchedId);
   if(!s) return;
 
@@ -1949,21 +1967,26 @@ function openRespond() {
     // 子供ピッカーモード
     childGroup.style.display = '';
     nameGroup.style.display  = 'none';
+    // prefillName が子供の名前と一致すればその子を自動選択
+    const targetChild = prefillName
+      ? myChildren.find(c => c.name === prefillName)
+      : null;
+    const firstChild = targetChild || myChildren[0];
     renderRespChildChips(myChildren, null);
-    // 最初の子を自動選択
-    selectRespChild(myChildren[0].id, myChildren[0].name);
+    selectRespChild(firstChild.id, firstChild.name);
   } else {
     // フリーテキストモード
     childGroup.style.display = 'none';
     nameGroup.style.display  = '';
     document.getElementById('memberNameList').innerHTML =
       members.map(m=>`<option value="${esc(m.name)}">`).join('');
-    const savedName = currentMember?.name || localStorage.getItem('schedRespName') || '';
+    const savedName = prefillName || currentMember?.name || localStorage.getItem('schedRespName') || '';
     document.getElementById('iRespName').value = savedName;
     const nameInput = document.getElementById('iRespName');
-    nameInput.readOnly = !!currentMember;
-    nameInput.style.background = currentMember ? '#f5f5f5' : '';
-    nameInput.style.color = currentMember ? '#555' : '';
+    const locked = !!currentMember || !!prefillName;
+    nameInput.readOnly = locked;
+    nameInput.style.background = locked ? '#f5f5f5' : '';
+    nameInput.style.color = locked ? '#555' : '';
     if(savedName) loadExistingAnswers(savedName);
     if(!currentMember) setTimeout(() => nameInput.focus(), 120);
   }
@@ -2073,10 +2096,28 @@ async function saveResponse() {
 
 // ---- Create Schedule ----
 function openCreateSched() {
+  editingSchedId = null;
   editSlots = [];
   document.getElementById('iSchedTitle').value = '';
   document.getElementById('iSchedDesc').value = '';
+  document.getElementById('createSchedTitle').textContent = '日程調整を作成';
+  document.getElementById('saveSchedBtn').textContent = '作成';
   renderSlotRows();
+  document.getElementById('mCreateSched').classList.add('show');
+  setTimeout(() => document.getElementById('iSchedTitle').focus(), 120);
+}
+
+function openEditSched() {
+  const s = schedules.find(s=>s.id===curSchedId);
+  if(!s) return;
+  editingSchedId = curSchedId;
+  editSlots = (s.slots||[]).map(sl=>({...sl}));
+  document.getElementById('iSchedTitle').value = s.title||'';
+  document.getElementById('iSchedDesc').value = s.description||'';
+  document.getElementById('createSchedTitle').textContent = '日程調整を編集';
+  document.getElementById('saveSchedBtn').textContent = '保存';
+  renderSlotRows();
+  closeModal('mSchedDetail');
   document.getElementById('mCreateSched').classList.add('show');
   setTimeout(() => document.getElementById('iSchedTitle').focus(), 120);
 }
@@ -2134,14 +2175,21 @@ async function saveSched() {
     dateLabel: sl.date ? formatDateLabel(sl.date) : '（日付未設定）'
   }));
 
+  const description = document.getElementById('iSchedDesc').value.trim();
   closeModal('mCreateSched');
-  await db.collection('takenoko_schedules').add({
-    title,
-    description: document.getElementById('iSchedDesc').value.trim(),
-    slots,
-    status: 'open',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+
+  if(editingSchedId) {
+    // 編集モード：既存ドキュメントを更新
+    await db.collection('takenoko_schedules').doc(editingSchedId).update({ title, description, slots });
+    editingSchedId = null;
+  } else {
+    // 新規作成
+    await db.collection('takenoko_schedules').add({
+      title, description, slots,
+      status: 'open',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
 }
 
 async function deleteSched() {
