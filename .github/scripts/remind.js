@@ -123,15 +123,20 @@ async function main() {
 
     let timeLabel = '—';
     if (r.direct) {
-      if (r.startTime) timeLabel = r.endTime ? `${r.startTime}〜${r.endTime}` : `${r.startTime}〜`;
+      // アプリは time フィールド（"19:00〜21:00"形式）で保存。旧形式の startTime/endTime にも対応
+      if (r.time) timeLabel = r.time;
+      else if (r.startTime) timeLabel = r.endTime ? `${r.startTime}〜${r.endTime}` : `${r.startTime}〜`;
     } else {
       timeLabel = (r.slotLabel || '').replace(/^\d+\/\d+\([^)]+\)\s*/, '').trim() || '—';
     }
 
+    // 備考：アプリは memo フィールドで保存（notes は旧名・後方互換）
+    const memo = r.memo || r.notes;
+
     lines.push(`🎭 ${scriptLabel}`);
     lines.push(`🕐 ${timeLabel}`);
     lines.push(`📍 ${r.venue || '未定'}`);
-    if (r.notes) lines.push(`📝 ${r.notes}`);
+    if (memo) lines.push(`📝 ${memo}`);
     lines.push('');
   });
   lines.push('たけのっ子劇場 稽古管理システム');
