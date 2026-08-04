@@ -1,0 +1,33 @@
+# 稼働キープ
+#
+# GitHub は「リポジトリを60日間さわらないと定期実行(schedule)を自動で停止する」ため、
+# 稽古リマインダーが毎日動いていても、コードの更新が無いと止められてしまう。
+# （実際 2026-08-04 に LINE稽古リマインダー が disabled_inactivity で停止した）
+#
+# そこで月1回だけタイムスタンプを更新してコミットし、リポジトリの活動を絶やさないようにする。
+name: 稼働キープ（定期実行が60日で止まるのを防ぐ）
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'   # 毎月1日 JST 09:00
+  workflow_dispatch:       # 手動実行も可能
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: タイムスタンプを更新してコミット
+        run: |
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/last-keepalive.txt
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/last-keepalive.txt
+          # 変更が無ければ何もしない（エラーで落とさない）
+          git diff --staged --quiet && echo "変更なし" && exit 0
+          git commit -m "稼働キープ：定期実行が60日ルールで止まらないようにする自動更新"
+          git push
